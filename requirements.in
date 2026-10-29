@@ -1,4 +1,4 @@
-# The runtime dependencies, pinned (Python 3.11 or later). requirements.txt is generated from this file:
+# The runtime dependencies, pinned (Python 3.11 or later for the CLI, 3.12 or later for the GUI). requirements.txt is generated from this file:
 # edit this file, then regenerate requirements.txt; never edit the .txt by hand.
 #   uv pip compile requirements.in --universal --python-version 3.11 --generate-hashes -o requirements.txt
 # Install with python -m pip install -r requirements.txt (pip checks every hash).
@@ -7,5 +7,6 @@ capstone==5.0.9
 pillow==13.0.*
 pyyaml==6.0.3
 backports.zstd==1.8.0; python_version < "3.14"
-# the GUI (python -m gui); the CLI (python -m porter) runs without it. Essentials holds QtCore, QtGui, QtWidgets and QtTest
-PySide6-Essentials==6.12.*
+# the GUI (python -m gui, Python 3.12 or later); the CLI (python -m porter) runs without it. Essentials holds QtCore, QtGui, QtWidgets and QtTest.
+# 6.12 drops a reference to True on each Python-signal emit, which aborts 3.11 (bool_dealloc); 3.12+ makes True immortal
+PySide6-Essentials==6.12.*; python_version >= "3.12"
