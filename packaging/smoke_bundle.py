@@ -51,6 +51,9 @@ def main(argv):
         exe = next((root / p for p in ('Contents/MacOS/nx2android', 'nx2android.exe', 'nx2android') if (root / p).is_file()), None)
         check('the app is in the bundle', exe is not None, str(root))
         if exe is None: return 1
+        if sys.platform.startswith('linux'):   # the X11 and Wayland starts themselves are manual (docs/RELEASE_CHECK.md); the plugins must be there
+            for pat in ('platforms/libqxcb.so', 'platforms/libqwayland*.so', 'wayland-shell-integration/libxdg-shell.so'):
+                check(f'Qt plugin {pat}', any(root.rglob(f'PySide6/Qt/plugins/{pat}')), 'missing from the bundle')
         home = tmp / 'home'; home.mkdir()
         env = dict(os.environ, NX2A_HOME=str(home))
         before = listing(root)

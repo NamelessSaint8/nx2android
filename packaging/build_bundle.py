@@ -5,7 +5,8 @@
 #   dist/nx2android-<version>-linux-x64.tar.gz      Linux: dist/nx2android/ with nx2android
 #   dist/nx2android-<version>-linux-arm64.tar.gz
 #   python packaging/build_bundle.py      (pip install -r requirements.txt -r requirements-build.txt; on Windows only, PyInstaller's bootloader compiled on
-#                                          this PC first: python packaging/build_bootloader.py)
+#                                          this PC first: python packaging/build_bootloader.py, since antivirus engines flag the prebuilt one. macOS and
+#                                          Linux use PyInstaller's own bootloader, which those hosts do not flag)
 # The bundle holds no toolchain: the Setup tab downloads NDK r27c, the .NET SDK 10 and platform-tools from their makers, or the player installs them (packaging/INSTALL.md).
 # Notarization and stapling of the DMG run in the release workflow, which holds the API key. packaging/smoke_bundle.py checks the result.
 import hashlib, os, platform, shutil, subprocess, sys
@@ -78,8 +79,10 @@ def main():
         (stage / 'Applications').symlink_to('/Applications'); shutil.copy2(ROOT / 'packaging/INSTALL.md', stage / 'INSTALL.md')
         run('hdiutil', 'create', '-volname', 'nx2android', '-srcfolder', stage, '-ov', '-format', 'UDZO', out)
         if sign: run('codesign', '--sign', sign, '--timestamp', out)
-    else:
+    elif os_ == 'windows':
         out = Path(shutil.make_archive(str(out).removesuffix('.zip'), 'zip', DIST, 'nx2android'))
+    else:   # tar keeps PyInstaller 6's symlinks, which zip would turn into copies or drop (never zip on Linux or macOS)
+        out = Path(shutil.make_archive(str(out).removesuffix('.tar.gz'), 'gztar', DIST, 'nx2android'))
     print(f'{app} ({len(files)} nxnative files)\n{out} ({out.stat().st_size / 2**20:.0f} MB)')
 
 
