@@ -35,7 +35,7 @@ A tester on any supported host (Windows x64, macOS Apple Silicon, Linux x64, Lin
 - [ ] Device manager: pick from connected devices, show GPU compatibility (BC textures, Vulkan 1.3), and install, update or remove per device
 - [ ] Per-game settings in the UI (60 fps, language, controller/touch overlay layout, env switches) instead of CLI flags
 - [ ] Guided first run: prod.keys, toolchain downloads and the first device, in place of the Setup checklist
-- [ ] GUI toolkit chosen by research (PySide6 or an alternative), keeping the GUI ↔ porter process boundary
+- [ ] GUI stays on PySide6 (Qt Widgets) per research, keeping the GUI ↔ porter process boundary
 
 **Cross-platform bundles**
 - [ ] Windows x64 bundle
@@ -47,7 +47,7 @@ A tester on any supported host (Windows x64, macOS Apple Silicon, Linux x64, Lin
 **Hardening (all of `.planning/codebase/CONCERNS.md`)**
 - [ ] Cancel stops the whole process tree on every OS; closing the window during a port asks first and stops the run
 - [ ] Errors from the CLI reach the GUI with their real cause (no swallowed stderr, no "no game found" for a crash)
-- [ ] Zip and tar extraction cannot write outside the unpack folder (symlinks, `..`, absolute paths, pre-3.11.4 tar)
+- [ ] Zip and tar extraction cannot write outside the unpack folder (symlinks, `..`, absolute paths; tar uses `filter='data'` and refuses Pythons without the CVE-2025-4517 fix: 3.11.13 / 3.12.11 / 3.13.4+)
 - [ ] The signing key is written atomically with mode 0600, and the tool refuses to silently regenerate it
 - [ ] Downloads and FPSLocker configs are checked against pinned or recorded hashes
 - [ ] A lock per build folder prevents two ports of the same game running at once
@@ -102,7 +102,7 @@ A tester on any supported host (Windows x64, macOS Apple Silicon, Linux x64, Lin
 |----------|-----------|---------|
 | Split by priority: v1 = cross-platform GUI rework + hardening + bundles; games, devices, cheats and Wii/Wii U next | The developer ranked the cross-platform GUI first; keeps the first milestone shippable | — Pending |
 | Rework the GUI (library, device manager, per-game settings, guided first run) rather than only packaging it | Testers need more than today's three tabs | — Pending |
-| GUI toolkit open; research compares PySide6 with alternatives | Best result on all four hosts matters more than keeping the current code | — Pending |
+| GUI toolkit: keep PySide6 (Qt Widgets) | Research: the frozen executable is also porter's and the engine scripts' Python, so any other toolkit ships two runtimes and two signing paths | — Pending (gated on the Phase 1 packaging spike) |
 | Hosts: Windows x64, macOS Apple Silicon, Linux x64, Linux arm64; macOS Intel dropped | Matches the test hardware the developer has | — Pending |
 | Linux arm64 uses distro adb and a community arm64 NDK | Google publishes no linux-arm64 host builds | — Pending |
 | macOS bundle signed and notarized with a Developer ID | Testers open it without Gatekeeper warnings | — Pending |
