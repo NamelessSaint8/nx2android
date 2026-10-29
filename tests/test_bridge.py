@@ -93,6 +93,85 @@ class Errors(unittest.TestCase):
         self.assertTrue(p.is_file(), p)
         self.assertEqual(p.parent, Path(HOME) / 'logs')
 
+    def stand_in(self, *opts):   # a Window whose start-up one-shots the stand-in answers; then runner.PORTER is fake_porter.py with opts
+        runner.PORTER = [FAKE, '--']; w = window(self)
+        runner.PORTER = [FAKE, *opts, '--']
+        return w
+
+    def card(self, w):   # inspect an empty folder; the card once the call has answered
+        w.port.folder.setText(tempfile.mkdtemp()); w.port.inspect()
+        self.assertTrue(until(lambda: 'Reading' not in w.port.card.text(), 10000), w.port.card.text())
+        return w.port.card.text()
+
+    def test_doctor_crash_shows_stderr(self):
+        w = self.stand_in('--stderr', 'Traceback (most recent call last):\\nValueError: <boom>', '--exit', '1')
+        self.assertTrue(hasattr(w.setup, 'check_msg'), 'SetupTab has no check_msg')
+        with mock.patch.object(w, 'set_ready') as ready:
+            w.setup.check()
+            self.assertTrue(until(lambda: 'Retry' in w.setup.check_msg.text(), 10000))
+        self.assertIn('ValueError: &lt;boom&gt;', w.setup.check_msg.text())
+        self.assertIn('href="retry"', w.setup.check_msg.text())
+        ready.assert_called_with(False)
+
+    def test_error_document(self):
+        fixture = REPO / 'tests/fixtures/bridge/inspect_error.json'
+        w = self.stand_in('--fixture', str(fixture), '--exit', '2')
+        msg = json.loads(fixture.read_text())['error'].replace('<', '&lt;').replace('>', '&gt;')
+        self.assertIn(msg, self.card(w))
+
+    def test_empty_answer(self):
+        w = self.stand_in(); runner.PORTER = ['-c', '']
+        text = self.card(w)
+        self.assertIn('porter gave no answer', text)
+        self.assertIn('href="retry"', text)
+
+    def test_undecodable_stderr(self):
+        w = self.stand_in('--stderr', '\\xff<b>', '--exit', '1')
+        with mock.patch.object(sys, 'excepthook') as hook:
+            text = self.card(w)
+        hook.assert_not_called()
+        self.assertIn('&lt;b&gt;', text)
+
+    def test_failed_to_start(self):
+        got = []
+        with mock.patch.object(runner.sys, 'executable', str(Path(tempfile.mkdtemp()) / 'no-python')):
+            runner.call_json(None, ['doctor', '--json'], lambda *a: got.append(a))
+        self.assertTrue(until(lambda: got, 5000)); QTest.qWait(200)
+        self.assertEqual(len(got), 1)
+        self.assertEqual(got[0][:2], (None, -1))
+        self.assertTrue(got[0][2])
+
+    def test_concurrent_calls(self):   # each call has its own timer: a hung one does not hold up a quick one
+        pf = Path(tempfile.mkdtemp()) / 'pids.json'; seq = []
+        runner.PORTER = [FAKE, '--hang', '--pid-file', str(pf), '--']
+        runner.call_json(None, ['devices', '--json'], lambda o, c, f: seq.append(('hung', o, f)), timeout=1)
+        runner.PORTER = [FAKE, '--']
+        runner.call_json(None, ['devices', '--json'], lambda o, c, f: seq.append(('quick', o, f)))
+        self.assertTrue(until(lambda: len(seq) == 2, 6000), seq)
+        if pf.is_file(): pids = json.loads(pf.read_text()); self.addCleanup(reap, pids['detached']); self.addCleanup(reap, pids['child'])
+        self.assertEqual(seq[0], ('quick', [], None))
+        self.assertEqual((seq[1][0], seq[1][1], seq[1][2]['timeout']), ('hung', None, 1))
+
+    def test_devices_and_games(self):
+        w = self.stand_in('--stderr', 'adb: <bad> cable', '--exit', '1')
+        w.port.refresh_devices()
+        self.assertTrue(until(lambda: w.port.device.itemText(0).startswith('porter: '), 10000), w.port.device.itemText(0))
+        self.assertIn('adb: <bad> cable', w.port.device.itemText(0))
+        self.assertIn('adb: <bad> cable', w.port.device.itemData(0, app.Qt.ToolTipRole) or '')
+        self.assertEqual(w.port.device.itemData(0), '')
+        self.assertTrue(hasattr(w.games, 'note'), 'GamesTab has no note')
+        w.games.load()
+        self.assertTrue(until(lambda: 'Retry' in w.games.note.text(), 10000))
+        self.assertIn('adb: &lt;bad&gt; cable', w.games.note.text())
+        with mock.patch.object(QMessageBox, 'warning', side_effect=AssertionError('a dialog')) as warn:
+            w.setup.download()
+            self.assertTrue(until(lambda: 'Retry' in w.setup.dl_step.text(), 10000), w.setup.dl_step.text())
+        warn.assert_not_called()
+        self.assertIn('adb: &lt;bad&gt; cable', w.setup.dl_step.text())
+        with mock.patch.object(app, 'call_json') as call:
+            w.setup.dl_step.linkActivated.emit('retry')
+        self.assertEqual(call.call_count, 1)
+
     def test_process_env(self):
         runner.PORTER = ['-c', "import json, os; print(json.dumps({'ev': 'say', 'msg': json.dumps([os.getcwd(), os.environ.get('NX2A_GUI')])}))"]
         p = runner.Porter(); evs = []; p.event.connect(evs.append)

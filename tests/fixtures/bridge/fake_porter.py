@@ -5,7 +5,8 @@
 #   --hang          --tree for a one-shot too: it never answers (gui/runner.call_json's timeout)
 #   --pid-file P    also write that pids object to P (a one-shot's stdout is its answer, so a test reads the pids from here)
 #   --ignore-stop   the run (and its child) ignore the stop request, so only the GUI's force kill ends them
-#   --exit N        exit code when not --tree;  --stderr TEXT  a line on stderr first
+#   --exit N        exit code when not --tree (a one-shot answers [] only with 0);  --stderr TEXT  a line on stderr first, with \n and \xff escapes
+#   --fixture FILE  write FILE's bytes to stdout verbatim instead of any answer (the golden replays, tests/fixtures/bridge/*.jsonl)
 import argparse, json, os, signal, subprocess, sys, time
 from pathlib import Path
 
@@ -28,10 +29,13 @@ def main():
     i = argv.index('--') if '--' in argv else -1
     ap = argparse.ArgumentParser()
     ap.add_argument('--tree', action='store_true'); ap.add_argument('--hang', action='store_true'); ap.add_argument('--ignore-stop', action='store_true')
-    ap.add_argument('--exit', type=int, default=0); ap.add_argument('--stderr'); ap.add_argument('--pid-file')
+    ap.add_argument('--exit', type=int, default=0); ap.add_argument('--stderr'); ap.add_argument('--pid-file'); ap.add_argument('--fixture')
     o, cmd = ap.parse_args(argv[:i] if i >= 0 else []), argv[i + 1:]
-    if o.stderr: print(o.stderr, file=sys.stderr, flush=True)
-    if cmd and cmd[0] in ONE_SHOT and not o.hang and not (cmd[0] == 'tools' and '--download' in cmd): print('[]', flush=True); return 0
+    if o.stderr: sys.stderr.buffer.write(o.stderr.encode().decode('unicode_escape').encode('latin-1') + b'\n'); sys.stderr.flush()   # raw bytes: a test's \xff
+    if o.fixture: sys.stdout.buffer.write(Path(o.fixture).read_bytes()); sys.stdout.flush(); return o.exit
+    if cmd and cmd[0] in ONE_SHOT and not o.hang and not (cmd[0] == 'tools' and '--download' in cmd):
+        if not o.exit: print('[]', flush=True)
+        return o.exit
     if not (o.tree or o.hang): return o.exit
     quiet = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     nt = os.name == 'nt'
