@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-10-29T08:54:12.488Z"
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-10-29T09:06:08.481Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 914249fb3a1c02f3aed9bf926b050dcf6c70ece3
+state_head: 56bdea5546d19dfc5217a5020d9f676add8a68aa
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 01 execution started
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P01 | resumed | 3 tasks | 8 files |
 | Phase 01 P05 | 3 min | 2 tasks | 3 files |
 | Phase 01 P02 | 7 min | 3 tasks | 6 files |
+| Phase 01 P06 | 9 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 01]: 01-02: runlog prints its own log and error events, so a failed porter.upstream import still names its log
 - [Phase 01]: 01-02: the cut-off key sweep prunes the top-level extract/ folder and never walks the extracted RomFS
 - [Phase 01]: 01-02: LOGS_KEPT = 30 counts the new log (29 old ones stay)
+- [Phase 01]: 01-06: CFBundleShortVersionString is the dotted numeric prefix of the fork tag (0.1.2 of 0.1.2-ns.1), 0.0.0 for hash builds
+- [Phase 01]: 01-06: build_bootloader.py is required on Windows only; macOS and Linux bundles use PyInstaller's own bootloader
+- [Phase 01]: 01-06: smoke_gui.py runs from the checkout through the frozen exe, so the bundle is not changed for the smoke test
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T08:54:12.472Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-10-29T09:06:08.464Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None

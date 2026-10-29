@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. When a porter command fails, crashes or hangs, the GUI shows the real cause, or a timeout message with Retry, never a swallowed stderr or "no game found". The full saved log of any run opens from the GUI.
   4. Every push runs the test suite on all four OSes, installed from the hashed lockfile, including headless GUI bridge tests that replay golden JSON-lines fixtures. A missing optional engine module (e.g. `lz4`) shows up as a clear skip, not an import failure.
   5. The release workflow builds all four bundles, signs and notarizes the macOS one, smoke-tests each frozen bundle, and reports the Linux glibc symbol floor and the `nxnative/` diff against upstream. Its signing secrets sit in a protected environment that pull-request workflows cannot reach, and every action is pinned by SHA.
-**Plans**: 3/8 plans executed
+**Plans**: 4/8 plans executed
 
 Plans:
 **Wave 1**
@@ -40,7 +40,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 01-02-PLAN.md — Porter run logs, log/error events, JSON one-shot errors, stop channel with Job Object, cut-off marker (wave 2)
-- [ ] 01-06-PLAN.md — Per-OS bundles (zip, signed .app in a DMG, tar.gz), read-only smoke test, glibc floor, install guide (wave 2)
+- [x] 01-06-PLAN.md — Per-OS bundles (zip, signed .app in a DMG, tar.gz), read-only smoke test, glibc floor, install guide (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 01-03-PLAN.md — GUI: real cause and Open log, tree-wide Cancel with "stopping…", close confirmation (wave 3)
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Bridge, Bundles and CI | 3/8 | In Progress | - |
+| 1. Bridge, Bundles and CI | 4/8 | In Progress | - |
 | 2. Porter Hardening | 0/TBD | Not started | - |
 | 3. Host Toolchains and Guided First Run | 0/TBD | Not started | - |
 | 4. Game Library and Per-Game Settings | 0/TBD | Not started | - |
