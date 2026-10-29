@@ -83,6 +83,36 @@ class Engine(unittest.TestCase):
         self.assertEqual(Path(r['NXNATIVE']), res / 'nxnative')
         self.assertFalse((self.home / 'engine').exists())
 
+    def test_prunes_other_versions(self):
+        exe, _ = self.bundle(mac=True)
+        (self.home / 'engine/old999/nxnative').mkdir(parents=True); (self.home / 'engine/abc123.tmp-1').mkdir()
+        self.start(exe, mac=True)
+        self.assertEqual(sorted(p.name for p in (self.home / 'engine').iterdir()), ['abc123', 'abc123.tmp-1'])   # another porter may still be copying
+
+    def test_concurrent_first_start(self):   # the GUI's three start-up calls
+        exe, _ = self.bundle(mac=True)
+        ps = [self.start(exe, mac=True, wait=False) for _ in range(3)]
+        rs = [self.result(p) for p in ps]
+        self.assertEqual({r['NXNATIVE'] for r in rs}, {str(self.home / 'engine/abc123/nxnative')})
+        self.assertEqual([p.name for p in (self.home / 'engine').iterdir()], ['abc123'])
+        self.assertTrue((self.home / 'engine/abc123/nxnative/dm/games/x.tsv').is_file())
+
+    def test_second_start_reuses(self):
+        exe, _ = self.bundle(mac=True)
+        nx = self.home / 'engine/abc123/nxnative'
+        self.start(exe, mac=True); (nx / 'dm/obj.txt').write_text('built')
+        before = sorted((str(p), p.stat().st_mtime_ns, p.stat().st_ino) for p in nx.rglob('*'))
+        self.start(exe, mac=True)
+        self.assertEqual(sorted((str(p), p.stat().st_mtime_ns, p.stat().st_ino) for p in nx.rglob('*')), before)
+
+
+class Launcher(unittest.TestCase):
+    def test_no_bytecode_flag(self):   # the bundle's interpreter writes no __pycache__ beside the bundle's or the engine's scripts
+        import ast
+        tree = ast.parse((ROOT / 'packaging/nx2android.py').read_text(encoding='utf-8'))
+        main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+        self.assertEqual(ast.unparse(main.body[0]), 'sys.dont_write_bytecode = True')
+
 
 if __name__ == '__main__':
     unittest.main()
