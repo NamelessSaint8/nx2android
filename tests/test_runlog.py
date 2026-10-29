@@ -1,6 +1,6 @@
 # The run side of the GUI bridge (porter/runlog.py, porter/procs.py): the saved run log and its protocol events, one-shot JSON errors,
 # the stop channel, the cut-off marker and log retention. Each test runs porter with its own NX2A_HOME; no game files, toolchains or device.
-import argparse, json, os, signal, subprocess, sys, tempfile, time, unittest
+import argparse, contextlib, io, json, os, signal, subprocess, sys, tempfile, time, unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -24,6 +24,22 @@ def porter(*args, home, env=None, **kw):
 
 
 def events(out): return [json.loads(ln) for ln in out.splitlines() if ln.startswith('{')]
+
+
+class InProcess(unittest.TestCase):   # runlog.run on a Namespace in this process, with its own NX2A_HOME
+    def setUp(self):
+        keep = dict(os.environ); self.addCleanup(lambda: (os.environ.clear(), os.environ.update(keep)))
+        os.environ.pop('NX2A_GUI', None)
+        self.home = Path(tempfile.mkdtemp()); os.environ['NX2A_HOME'] = str(self.home)
+        self.work = Path(tempfile.mkdtemp()) / '0100000000AAA000_build'; self.work.mkdir()
+
+    def run_cmd(self, fn, cmd='port', progress='off'):
+        from porter import runlog
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out): code = runlog.run(argparse.Namespace(cmd=cmd, progress=progress, json=False, install=False), fn)
+        return code, out.getvalue()
+
+    def log(self): return max((self.home / 'logs').glob('*.log')).read_text(encoding='utf-8')
 
 
 class RunLog(unittest.TestCase):
@@ -52,6 +68,68 @@ class RunLog(unittest.TestCase):
         logs = list((home / 'logs').glob('*-port.log'))
         self.assertEqual(len(logs), 1)
         self.assertIn('no prod.keys', logs[0].read_text(encoding='utf-8'))
+
+
+class RunLogInProcess(InProcess):
+    def test_traceback_in_log(self):
+        from porter import runlog
+        out = io.StringIO()
+        def boom(a): raise ValueError('boom')
+        with self.assertRaises(ValueError), contextlib.redirect_stdout(out): runlog.run(argparse.Namespace(cmd='port', progress='json', json=False, install=False), boom)
+        text = self.log()
+        self.assertIn('Traceback', text); self.assertIn('ValueError: boom', text)
+        self.assertIn('ValueError', [e['type'] for e in events(out.getvalue()) if e['ev'] == 'error'])
+
+    def test_tool_logs_listed(self):
+        from porter import runlog
+        self.run_cmd(lambda a: runlog.build_folder(self.work, self.work / 'logs') or 0)
+        self.assertIn(str(self.work / 'logs'), self.log().rstrip('\n').splitlines()[-1])
+
+    def test_no_key_material(self):
+        game, keys = Path(tempfile.mkdtemp()), Path(tempfile.mkdtemp()) / 'prod.keys'
+        keys.write_text('header_key = SECRETVALUE\n', encoding='utf-8')
+        r = porter('port', game, '-k', keys, '--progress', 'json', home=self.home)
+        text = Path(json.loads(r.stdout.splitlines()[0])['path']).read_text(encoding='utf-8')
+        self.assertIn(str(keys), text)
+        self.assertNotIn('SECRETVALUE', text); self.assertNotIn('SECRETVALUE', r.stdout)
+
+
+class Marker(InProcess):
+    def marker(self): return self.work / '.port-running'
+
+    def test_written_and_removed_on_success(self):
+        from porter import runlog
+        for code, kept in ((0, False), (1, False), (130, True)):
+            seen = []
+            def fn(a):
+                runlog.build_folder(self.work, self.work / 'logs'); seen.append(self.marker().is_file()); return code
+            self.assertEqual(self.run_cmd(fn)[0], code)
+            self.assertEqual((seen, self.marker().is_file()), ([True], kept), code)
+
+    def test_cut_off_redoes_stages(self):
+        from porter import runlog
+        old = [self.work / 'aoc.key', self.work / 'android/shaders.dmsv.key']; game_file = self.work / 'extract/RomFS/data.key'
+        for f in old + [game_file]: f.parent.mkdir(parents=True, exist_ok=True); f.write_text('k', encoding='utf-8')
+        self.marker().write_text('1 earlier', encoding='utf-8')
+        fresh = []
+        def fn(a):
+            runlog.build_folder(self.work, self.work / 'logs'); fresh.append(self.marker().read_text(encoding='utf-8')); return 130
+        self.run_cmd(fn)
+        self.assertEqual([f.exists() for f in old], [False, False])
+        self.assertTrue(game_file.is_file())
+        self.assertNotEqual(fresh, ['1 earlier'])
+        self.assertIn('the last port of this game was cut off', self.log())
+
+
+class Retention(InProcess):
+    def test_keeps_newest_30(self):
+        d = self.home / 'logs'; d.mkdir()
+        for i in range(35): (d / f'20200101-0000{i:02d}-port.log').write_text('old', encoding='utf-8')
+        self.run_cmd(lambda a: 0, cmd='install')
+        names = sorted(p.name for p in d.glob('*.log'))
+        self.assertEqual(len(names), 30)
+        self.assertTrue(names[-1].endswith('-install.log'))
+        self.assertEqual(names[0], '20200101-000005-port.log')
 
 
 class OneShot(unittest.TestCase):
