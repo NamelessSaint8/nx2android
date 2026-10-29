@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-10-29T08:27:58.038Z"
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-10-29T08:38:15.808Z"
 last_activity: 2026-10-29
-last_activity_desc: Roadmap created (6 phases, 60/60 v1 requirements mapped)
-state_head: 4f233abe2e9fe37a4aef974db376574b3f6c8e12
+last_activity_desc: Phase 01 execution started
+state_head: 08e52efcbd32c9eb7cf4ce1d1e45e5db71249cb0
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-29)
 
 **Core value:** A tester on any supported host (Windows x64, macOS Apple Silicon, Linux x64, Linux arm64) can take their own Switch dump and get a working port onto their Android device through the GUI, without help.
-**Current focus:** Phase 1: Bridge, Bundles and CI
+**Current focus:** Phase 01 — Bridge, Bundles and CI
 
 ## Current Position
 
-Phase: 01 (Bridge, Bundles and CI) — READY TO EXECUTE
-Plan: 0 of TBD in current phase
+Phase: 01 (Bridge, Bundles and CI) — EXECUTING
+Plan: 2 of 8
 Status: Ready to execute
-Last activity: 2026-10-29 — Roadmap created (6 phases, 60/60 v1 requirements mapped)
+Last activity: 2026-10-29 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,11 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 01 P01 | resumed | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -64,6 +69,7 @@ Recent decisions affecting current work:
 - [Roadmap]: BRDG-01 is whole in Phase 1, including the Windows Job Object and MSBuild node-reuse env that research had put in Phase 2
 - [Roadmap]: GUI features are vertical slices (porter JSON command + view per phase); the new shell starts in Phase 3 beside `gui/app.py` and becomes the default in Phase 6
 - [Roadmap]: DEV-06 (launch on device) and DEV-07 (logcat) stay in v1 per REQUIREMENTS.md, although research listed them as v1.x
+- [Phase 01]: Runtime, build and dev deps each get their own .in and hashed uv lock; build/dev locks constrained by requirements.txt
 
 ### Pending Todos
 
@@ -89,6 +95,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T07:12:10.530Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-bridge-bundles-and-ci/01-CONTEXT.md
+Last session: 2026-10-29T08:38:15.794Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None

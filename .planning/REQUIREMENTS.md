@@ -65,7 +65,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 - [ ] **PKG-03**: User on Linux x64 (glibc 2.34+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [ ] **PKG-04**: User on Linux arm64 (glibc 2.39+: Ubuntu 24.04+, Debian 13, Fedora 40+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [ ] **PKG-05**: The bundle never writes into its own folder; it runs from a read-only location, and the macOS signature still verifies after a full port
-- [ ] **PKG-06**: Python dependencies are pinned in a hashed universal lockfile, with build and dev requirements declared separately
+- [x] **PKG-06**: Python dependencies are pinned in a hashed universal lockfile, with build and dev requirements declared separately
 - [ ] **PKG-07**: Downloaded toolchains (NDK, .NET, platform-tools) and NuGet packages are pinned to exact versions and hashes in one manifest
 
 ### CI
@@ -202,7 +202,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PKG-03 | Phase 1 | Pending |
 | PKG-04 | Phase 1 | Pending |
 | PKG-05 | Phase 1 | Pending |
-| PKG-06 | Phase 1 | Pending |
+| PKG-06 | Phase 1 | Complete |
 | PKG-07 | Phase 2 | Pending |
 | CI-01 | Phase 1 | Pending |
 | CI-02 | Phase 1 | Pending |
