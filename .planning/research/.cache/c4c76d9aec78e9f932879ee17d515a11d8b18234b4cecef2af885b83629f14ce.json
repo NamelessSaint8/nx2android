@@ -1,0 +1,1 @@
+{"content":"dotnet build keeps MSBuild node-reuse servers alive (~10 min) by design since SDK 2.1.300; MSBUILDDISABLENODEREUSE=1 or -nodeReuse:false makes them exit; MSBuild server mode keeps task DLLs locked.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-10-29T05:16:29.016Z","ttl":86400000,"kind":"web"}

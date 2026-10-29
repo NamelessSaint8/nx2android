@@ -1,0 +1,1 @@
+{"content":"Vulkan version via adb shell pm list features -> feature:android.hardware.vulkan.version=N, N=VK_MAKE_API_VERSION (major<<22|minor<<12|patch); 4206592=1.3.0. Devices must declare it (AOSP implement-vulkan).","source":"web","provider":"websearch","confidence":"LOW","fetched_at":"2026-10-29T05:12:31.399Z","ttl":86400000,"kind":"web"}

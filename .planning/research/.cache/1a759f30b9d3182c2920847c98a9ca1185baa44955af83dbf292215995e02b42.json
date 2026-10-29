@@ -1,0 +1,1 @@
+{"content":"PyInstaller 6.0 redesigned macOS BUNDLE: data files go under Contents/Resources, shared libs under Contents/Frameworks, only the executable in Contents/MacOS; .framework structure fixed for codesign.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-10-29T05:16:28.915Z","ttl":86400000,"kind":"docs"}
