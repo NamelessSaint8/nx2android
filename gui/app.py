@@ -173,7 +173,7 @@ class PortTab(QWidget):
         self.porter.start(args)
 
     def cancel(self):
-        self.cancelled = True; self.porter.cancel(); self.append('[RED] cancelled')
+        self.cancelled = True; self.porter.stop(); self.step.setText('stopping…'); self.cancel_btn.setEnabled(False)   # "cancelled" once finished says the tree is gone
 
     def append(self, msg):
         red = msg.startswith('[RED] ')
@@ -229,7 +229,8 @@ class PortTab(QWidget):
             if self.result: self.open_btn.setEnabled(True); self.inst_btn.setEnabled(True)
         else:
             cause = (self.error or {}).get('msg') or self.red
-            self.step.setText('cancelled' if self.cancelled or code == 130 else f'failed after {took}' + (f': {cause}' if cause else ''))
+            if code == 130 or self.cancelled: self.step.setText('cancelled'); self.append('[RED] cancelled')
+            else: self.step.setText(f'failed after {took}' + (f': {cause}' if cause else ''))
             self.prog.setRange(0, 1000); self.prog.setValue(0)
 
     def open_out(self):
