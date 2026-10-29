@@ -9,7 +9,7 @@ findings:
     title: "Windows stop without a Job Object orphans the whole tree"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Child processes inherit the stop channel (porter's stdin), and `adb shell` can swallow \"stop\""
   - id: WR-03
     severity: warning
@@ -21,7 +21,7 @@ findings:
     title: "`upstream-diff` is described as \"a report, not a gate\", but the release job needs it"
   - id: WR-05
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The GUI's `devices` limit (15 s) is shorter than porter's own adb timeouts (30 s)"
   - id: WR-06
     severity: warning
@@ -43,9 +43,9 @@ findings:
     severity: info
     disposition: open
     title: "Two ways of escaping, and a misleading status on quit"
-open: 6
+open: 4
 total: 10
-recorded: 2026-10-29T21:11:26.116Z
+recorded: 2026-10-29T21:11:47.122Z
 ---
 
 # Phase 01: Code Review Disposition
@@ -53,10 +53,10 @@ recorded: 2026-10-29T21:11:26.116Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-02 | warning | open | - |
+| WR-02 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-03 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-04 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-05 | warning | open | - |
+| WR-05 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-06 | warning | fixed | 01-REVIEW-FIX.md |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
