@@ -6,8 +6,16 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 os.environ['NX2A_HOME'] = tempfile.mkdtemp(prefix='nx2a_test_home_')
 
-from porter import config, datapack, pipeline, profiles   # noqa: E402
-from porter.upstream import android_profile, game          # noqa: E402
+MISSING = None
+try:
+    from porter import config, datapack, pipeline, profiles   # noqa: E402
+    from porter.upstream import android_profile, game          # noqa: E402
+except ModuleNotFoundError as e:   # CI installs the lock, so there a missing engine module fails; locally it is a named skip
+    if (MISSING := (e.name or '').split('.')[0]) not in ('lz4', 'capstone', 'PIL', 'yaml', 'backports') or os.environ.get('CI'): raise
+
+
+def setUpModule():   # not a module-level SkipTest: `python -m unittest tests.test_porter` crashes on one
+    if MISSING: raise unittest.SkipTest(f'{MISSING} is not installed (python -m pip install -r requirements.txt): the engine modules need it')
 
 NEO = '010043B013C5C000'
 
