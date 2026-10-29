@@ -29,9 +29,10 @@ def adb_server():
     from porter import config, toolchain
     exe = toolchain.find_adb(config.load())
     if not exe: return
-    try: subprocess.run([str(exe), 'start-server'], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30,
+    try: subprocess.run([str(exe), 'start-server'], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
                         start_new_session=os.name != 'nt', creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-    except (OSError, subprocess.TimeoutExpired): pass   # the first adb command reports the real problem
+    # the first adb command reports the real problem (and starts the server itself); 10 s keeps `devices` inside the GUI's limit (WR-05)
+    except (OSError, subprocess.TimeoutExpired): pass
 
 
 def _k():
