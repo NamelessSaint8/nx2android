@@ -2,6 +2,7 @@
 # the stop channel, the cut-off marker and log retention. Each test runs porter with its own NX2A_HOME; no game files, toolchains or device.
 import argparse, contextlib, io, json, os, signal, subprocess, sys, tempfile, time, unittest
 from pathlib import Path
+from unittest import mock
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -219,6 +220,14 @@ class Stop(unittest.TestCase):
         p.stdin.write('stop\n'); p.stdin.flush()
         self.stopped(p, log)
         self.assertTrue(gone(pid), f'grandchild {pid} outlived the stop')
+
+    def test_windows_stop_without_job_kills_tree(self):   # WR-01: no Job Object, so the watcher taskkills porter's own tree before it exits
+        from porter import procs
+        with mock.patch.object(procs.os, 'read', side_effect=[b'stop\n']), mock.patch.object(procs.os, 'name', 'nt'), \
+             mock.patch.object(procs.subprocess, 'run') as run, mock.patch.object(procs.os, '_exit') as ex, contextlib.redirect_stdout(io.StringIO()):
+            procs._watch(None, lambda: None)
+        self.assertEqual(run.call_args[0][0], ['taskkill', '/T', '/F', '/PID', str(os.getpid())])
+        ex.assert_called_once_with(130)
 
     def test_msbuild_env(self):
         from porter import procs

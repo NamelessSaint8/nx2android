@@ -80,7 +80,7 @@ class Porter(QObject):
         if run is not self.p or self.ended: return   # a later run, or a group id that may be someone else's by now
         if os.name == 'nt':
             if run.state() != QProcess.NotRunning:
-                subprocess.run(['taskkill', '/T', '/F', '/PID', str(run.processId())], capture_output=True)   # a porter whose Job Object could not be made
+                subprocess.run(['taskkill', '/T', '/F', '/PID', str(run.processId())], capture_output=True)   # a porter that did not end its own tree
                 run.kill()   # closing porter's handle ends its kill-on-close job
         elif _alive(self.pgid): self._kill(signal.SIGKILL)
 

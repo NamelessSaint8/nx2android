@@ -81,4 +81,6 @@ def _watch(job, on_stop, as_json=False):
     try: print(json.dumps({'ev': 'say', 'msg': '[RED] interrupted'}) if as_json else '[RED] interrupted', flush=True)
     except (OSError, ValueError): pass   # stdout gone with the GUI (EOF): the job must still end
     if job: _k().TerminateJobObject(job, 130)
+    # WR-01: no job, so porter ends its own tree; once porter is gone the GUI's taskkill /T no longer finds dotnet, MSBuild or clang under it
+    else: subprocess.run(['taskkill', '/T', '/F', '/PID', str(os.getpid())], capture_output=True, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     os._exit(130)
