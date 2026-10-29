@@ -144,8 +144,10 @@ class PortTab(QWidget):
 
     def refresh_devices(self):
         cur = self.device.currentData() or config.load().get('device')
-        def got(rows, code, fail=None):
+        def got(rows, code, fail):
             self.device.clear()
+            if fail:   # the cause in the combo, stderr as its tooltip; the Refresh button beside it is the retry
+                self.device.addItem('porter: ' + cause(fail), ''); self.device.setItemData(0, fail['stderr'] or cause(fail), Qt.ToolTipRole); return
             for r in rows or []:
                 if r['state'] == 'device': self.device.addItem(f'{r["serial"]}  {r["info"]}', r['serial'])
             if not self.device.count(): self.device.addItem('no device connected', '')
@@ -265,6 +267,8 @@ class SetupTab(QWidget):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers); self.table.setSelectionMode(QTableWidget.NoSelection)
         hh = self.table.horizontalHeader(); hh.setSectionResizeMode(0, QHeaderView.ResizeToContents); hh.setSectionResizeMode(1, QHeaderView.ResizeToContents); hh.setSectionResizeMode(2, QHeaderView.Stretch)
         gl.addWidget(self.table)
+        self.check_msg = QLabel(''); self.check_msg.setWordWrap(True); self.check_msg.setTextFormat(Qt.RichText)   # a failed check, with Retry
+        self.check_msg.linkActivated.connect(lambda _link: self.check()); gl.addWidget(self.check_msg)
         note = QLabel('A port needs the <b>Android NDK r27c</b>, the <b>.NET SDK 10</b> and, to install from here, Android <b>platform-tools</b>. '
                       '<b>Download missing tools</b> fetches them from Google and Microsoft (about 1 GB) into your nx2android folder; or install them yourself and set their paths below. '
                       'Your <b>prod.keys</b> must come from your own Switch. Keys and game files never leave your computer except to your own device.')
@@ -290,9 +294,9 @@ class SetupTab(QWidget):
         self.dl_btn.setEnabled(False); self.dl_step.setText('reading the download lists…')
         call_json(self, ['tools', '--json'], self.confirm_download)
 
-    def confirm_download(self, items, code, fail=None):
+    def confirm_download(self, items, code, fail):
         self.dl_btn.setEnabled(True); self.dl_step.setText('')
-        if items is None: QMessageBox.warning(self, 'Download', 'Could not read the download lists from Google and Microsoft. Check the internet connection and try again.'); return
+        if fail: self.dl_step.setTextFormat(Qt.RichText); self.dl_step.setText(failed(fail)); return   # the real cause: a "check the connection" dialog hid a missing lz4
         if not items: QMessageBox.information(self, 'Download', 'Nothing to download: every tool is there.'); return
         rows = ''.join(f'<li><b>{it["name"]}</b> {it["version"]}, {size(it["size"])}, from {it["url"].split("/")[2]} (<a href="{it["license"]}">license</a>)</li>' for it in items)
         box = QMessageBox(QMessageBox.Question, 'Download missing tools', f'<p>Download and unpack into your nx2android folder:</p><ul>{rows}</ul>'
@@ -325,8 +329,9 @@ class SetupTab(QWidget):
                                  + (' &nbsp;<a href="log">Open log</a>' if self.dl_log else ''))
         self.load()
 
-    def open_dl_log(self, _link):
-        if self.dl_log: QDesktopServices.openUrl(QUrl.fromLocalFile(self.dl_log))
+    def open_dl_log(self, link):   # dl_step's links: the failed download's log, or Retry of the download lists
+        if link == 'retry': self.download()
+        elif self.dl_log: QDesktopServices.openUrl(QUrl.fromLocalFile(self.dl_log))
 
     def pick(self, key, kind):
         e = self.edits[key]
@@ -344,8 +349,10 @@ class SetupTab(QWidget):
         config.save(c); self.check()
 
     def check(self):
-        def got(rows, code, fail=None):
-            self.table.setRowCount(0)
+        self.check_msg.setText('')   # a Retry link is gone before the new call
+        def got(rows, code, fail):
+            self.table.setRowCount(0); self.check_msg.setText(failed(fail) if fail else '')
+            if fail: self.win.set_ready(False); return
             for r in rows or []:
                 i = self.table.rowCount(); self.table.insertRow(i)
                 mark = QTableWidgetItem('✓' if r['ok'] else ('✗' if r['required'] else '–'))
@@ -366,11 +373,16 @@ class GamesTab(QWidget):
         self.table.verticalHeader().setVisible(False); self.table.setEditTriggers(QTableWidget.NoEditTriggers); self.table.setSortingEnabled(True)
         hh = self.table.horizontalHeader(); hh.setSectionResizeMode(1, QHeaderView.Stretch); hh.setSectionResizeMode(2, QHeaderView.ResizeToContents); hh.setSectionResizeMode(3, QHeaderView.Stretch)
         lab = QLabel('Games ported to Android. <b>playable</b>, <b>wip</b> (plays, with parts missing) and <b>boots</b> ones can be ported; any other game can still be tried with Experimental on the Port tab.')
-        lab.setWordWrap(True); lab.setTextFormat(Qt.RichText)
+        lab.setWordWrap(True); lab.setTextFormat(Qt.RichText); self.note, self.about = lab, lab.text()
+        lab.linkActivated.connect(lambda _link: self.load())   # Retry
         v.addWidget(lab); v.addWidget(self.table)
-        call_json(self, ['profiles', '--json'], self.got)
+        self.load()
 
-    def got(self, rows, code, fail=None):
+    def load(self):
+        self.note.setText(self.about); call_json(self, ['profiles', '--json'], self.got)
+
+    def got(self, rows, code, fail):
+        if fail: self.note.setText(self.about + '<br>' + failed(fail)); return
         rows = sorted(rows or [], key=lambda r: r['name'].lower())
         self.table.setSortingEnabled(False); self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
