@@ -70,7 +70,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 
 ### CI
 
-- [ ] **CI-01**: Every push runs the test suite on Windows, macOS, Linux x64 and Linux arm64
+- [x] **CI-01**: Every push runs the test suite on Windows, macOS, Linux x64 and Linux arm64
 - [ ] **CI-02**: A release workflow builds all four bundles, signs and notarizes the macOS one, and smoke-tests each frozen bundle
 - [ ] **CI-03**: Signing secrets live in a protected release environment, actions are pinned by SHA, and pull-request workflows cannot reach secrets
 - [ ] **CI-04**: CI checks the Linux bundles' glibc symbol floor and reports the `nxnative/` diff against upstream
@@ -98,7 +98,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 ### Tests
 
 - [ ] **TEST-01**: Tests cover downloads and unpacking (crafted zip/tar), adb and install (resume, size parsing, stale-file removal, replace-signer), toolchain detection per OS, and CLI error paths
-- [ ] **TEST-02**: The suite reports a clear skip instead of failing at import when optional engine modules (e.g. `lz4`) are missing
+- [x] **TEST-02**: The suite reports a clear skip instead of failing at import when optional engine modules (e.g. `lz4`) are missing
 - [x] **TEST-03**: GUI bridge tests replay golden JSON-lines fixtures and run headless (Qt offscreen)
 
 ### Verification
@@ -204,7 +204,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PKG-05 | Phase 1 | Complete |
 | PKG-06 | Phase 1 | Complete |
 | PKG-07 | Phase 2 | Pending |
-| CI-01 | Phase 1 | Pending |
+| CI-01 | Phase 1 | Complete |
 | CI-02 | Phase 1 | Pending |
 | CI-03 | Phase 1 | Pending |
 | CI-04 | Phase 1 | Pending |
@@ -223,7 +223,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HARD-09 | Phase 2 | Pending |
 | HARD-10 | Phase 2 | Pending |
 | TEST-01 | Phase 2 | Pending |
-| TEST-02 | Phase 1 | Pending |
+| TEST-02 | Phase 1 | Complete |
 | TEST-03 | Phase 1 | Complete |
 | VER-01 | Phase 6 | Pending |
 | VER-02 | Phase 6 | Pending |

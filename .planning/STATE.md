@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-10-29T09:32:41.928Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-10-29T16:03:58.778Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 88f44607f8b01ac56a09ea10bb10e2e4586849cb
+state_head: 4d9e2132d27daa87a610315db2254a076fc1115e
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 01 execution started
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P06 | 9 min | 3 tasks | 9 files |
 | Phase 01 P03 | 10min | 3 tasks | 5 files |
 | Phase 01 P04 | 11min | 3 tasks | 11 files |
+| Phase 01 P07 | 2 fix rounds | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 01]: 01-04: one-shot calls report done(obj, code, fail); the exit code alone is no failure (inspect exits 2 for an unportable game)
 - [Phase 01]: 01-04: a one-shot whose owner is destroyed mid-call calls nothing and kills its own session (shiboken6.isValid guard)
 - [Phase 01]: 01-04: port_build_error.jsonl records a port of a missing folder (machine-independent, names the folder); fake_porter --hang makes a one-shot hang
+- [Phase 01]: The GUI needs Python 3.12+ (PySide6 6.12 drops a ref on True per signal emit, aborting 3.11); the CLI keeps 3.11+. Supersedes the GUI part of 'Python 3.11+ for dev runs'
+- [Phase 01]: test_bridge skips on Python < 3.12 in CI too: a declared version floor, a deliberate exception to TEST-02's fail-in-CI rule
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T09:32:41.912Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-10-29T16:03:58.760Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None
