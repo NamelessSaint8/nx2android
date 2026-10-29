@@ -130,7 +130,12 @@ jobs:
       - name: Staple and check as Gatekeeper will
         run: |
           dmg=$(echo dist/nx2android-*-macos-arm64.dmg)
-          xcrun stapler staple "$dmg"
+          # stapler fetches the ticket from CloudKit; run 40937559241 lost that link (-1005, error 68) right after an Accepted notarization
+          for n in 1 2 3 4; do
+            xcrun stapler staple "$dmg" && break
+            [ "$n" -lt 4 ] || { echo "[RED] stapler staple failed 4 times"; exit 1; }
+            echo "stapler staple failed, retry $n"; sleep $((n * 20))
+          done
           xcrun stapler validate "$dmg"
           spctl -a -t open --context context:primary-signature -v "$dmg"
       - name: Smoke-test from the read-only mount (re-verifies codesign afterwards)
