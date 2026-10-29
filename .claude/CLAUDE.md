@@ -16,7 +16,7 @@ nx2android turns a player's own Nintendo Switch game dump into a native Android 
 - **No game-specific code in the Android runtime**: per-title data goes in `nxnative/dm/games/<title ID>/` (enforced by `tests/arch_rules.py`).
 - **Toolchains are not bundled**: NDK, .NET and adb are downloaded by Setup or supplied by the player. On Linux arm64 there are no official Google NDK or platform-tools builds, so the tool uses distro adb and a community arm64 NDK.
 - **macOS distribution**: Developer ID signing plus notarization, which means hardened runtime and entitlements for the frozen Python and the child processes it launches. The signing secrets live in GitHub Actions.
-- **Python**: 3.11+ today. The safe tar filter needs 3.11.4+.
+- **Python**: 3.11+ for dev runs; bundles ship 3.14. Safe tar extraction needs `filter='data'` and the CVE-2025-4517 fix (3.11.13 / 3.12.11 / 3.13.4+).
 - **Android target**: arm64-v8a, Android 10+ (minSdk 29), Vulkan 1.3, BC texture support.
 - **Legal**: never ship keys, game files or FPSLocker configs.
 
