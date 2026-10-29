@@ -1,19 +1,21 @@
 # The run's own log (D-01, D-02): porter, not the GUI, writes each long command (port, install, tools --download) to <user dir>/logs/<time>-<command>.log,
 # as readable text: the lines the GUI's log pane shows (stage start and end with times, say lines, [RED] errors) and the traceback of a crash.
 # The protocol gets {"ev":"log","path"} first, {"ev":"error","msg","type","log"} when the run fails and "log" on the result event (docs/ARCHITECTURE.md).
-# A one-shot --json command that crashes answers {"error": "<Type>: <message>"} on stdout instead of a bare traceback.
-import json, platform, re, sys, threading, time, traceback
+# A one-shot --json command that crashes answers {"error": "<Type>: <message>"} on stdout instead of a bare traceback. D-08: a port's build folder holds
+# a marker while it runs, so the next port of a game that was cut off (a stop, a crash of the machine, a SIGKILL) redoes every cached stage.
+import json, os, platform, re, sys, threading, time, traceback
 
 from porter import paths, procs
 
 LONG = ('port', 'install')   # and tools --download
+MARKER, LOGS_KEPT = '.port-running', 30
 RED = re.compile(r'(?:\[\d\d:\d\d:\d\d\] )?\[RED\] (.*)', re.S)   # upstream's say() puts the clock first
 _lock = threading.Lock()   # PROG.say runs on other threads too (the stage pollers)
 S = {}
 
 
 def reset():   # the run's state: the open log, its path, the stage it is in, the last [RED] message
-    S.clear(); S.update(f=None, path=None, stage='', red='', t0=time.time())
+    S.clear(); S.update(f=None, path=None, stage='', red='', work=None, tools=None, t0=time.time())
 
 
 reset()
@@ -28,11 +30,42 @@ def _close(last):   # the last lines, then the log is closed (a second call does
     with _lock:
         f, S['f'] = S['f'], None
         if not f: return
-        f.write(f'{last}\n[{time.strftime("%H:%M:%S")}] ended after {int(time.time() - S["t0"])} s\n'); f.close()
+        f.write(f'{last}\n[{time.strftime("%H:%M:%S")}] ended after {int(time.time() - S["t0"])} s\n')
+        if S['tools']: f.write(f'per-tool logs: {S["tools"]}\n')
+        f.close()
 
 
 def cut_off():   # a stop: the stage the run was in, then the log is closed (procs' Windows watcher calls it just before it ends the job)
     _close(f'[RED] cancelled during {S["stage"] or "the start"}')
+
+
+def build_folder(work, logs):
+    """The port's build folder is known (pipeline.inputs): name it and its per-tool logs in the run log, and mark the run (D-08).
+    A marker already there is a port that never ended: every stage reuse key goes, except under extract/, whose RomFS can hold the game's own *.key
+    files (an extraction is swapped in whole, so it is never half done)"""
+    S.update(work=work, tools=logs)
+    _w(f'title ID {work.name.removesuffix("_build")}, build folder {work}')
+    m = work / MARKER
+    if m.exists():
+        from porter.upstream import say
+        say('[RED] the last port of this game was cut off: every stage runs again')
+        for root, dirs, files in os.walk(work):
+            if root == str(work) and 'extract' in dirs: dirs.remove('extract')
+            for n in files:
+                if n.endswith('.key'): os.unlink(os.path.join(root, n))
+    m.write_text(f'{os.getpid()} {time.strftime("%Y-%m-%d %H:%M:%S")}\n', encoding='utf-8')
+
+
+def _unmark():   # a run that ended, well or with a reported error; a stop keeps the marker
+    if S['work']:
+        try: (S['work'] / MARKER).unlink(missing_ok=True)
+        except OSError as e: _w(f'[RED] cannot remove {S["work"] / MARKER}: {e}')
+
+
+def _prune(d):   # the newest LOGS_KEPT logs stay, the new one included; the names start with the time, so they sort by it
+    for p in sorted(d.glob('*.log'))[:-(LOGS_KEPT - 1) or None]:
+        try: p.unlink()
+        except OSError: pass   # another porter still writing it (Windows)
 
 
 def _event(a, obj):
@@ -40,7 +73,7 @@ def _event(a, obj):
 
 
 def _open(a):
-    d = paths.user_dir() / 'logs'; d.mkdir(exist_ok=True)
+    d = paths.user_dir() / 'logs'; d.mkdir(exist_ok=True); _prune(d)
     stem = f'{time.strftime("%Y%m%d-%H%M%S")}-{a.cmd}'; p, n = d / f'{stem}.log', 1
     while True:   # two runs started in the same second get -2, -3 …
         try: f = open(p, 'x', encoding='utf-8', buffering=1); break   # line-buffered: a killed run's log is whole up to the kill
@@ -99,9 +132,10 @@ def run(a, fn):
     except Exception as e:
         _w(traceback.format_exc().rstrip())
         _event(a, {'ev': 'error', 'msg': str(e), 'type': type(e).__name__, 'log': str(p)})
-        _close(f'[RED] {type(e).__name__}: {e}'); unwrap()
+        _unmark(); _close(f'[RED] {type(e).__name__}: {e}'); unwrap()
         raise
     unwrap()
+    if code != 130: _unmark()
     if code == 1:
         _event(a, {'ev': 'error', 'msg': S['red'] or 'failed', 'type': 'BuildError', 'log': str(p)})
         _close('failed')

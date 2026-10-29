@@ -81,6 +81,14 @@ What the port refuses: a game whose `main` renders with Vulkan or OpenGL (the An
 
 Events: with `--progress json`, every line on stdout is one JSON object, the protocol of upstream's NSP script: `stage`, `step`, `progress`, `stage_end`, `say`; `porter` adds `result` (the outputs) at the end. A line starting `[RED] ` in a `say` is an error or warning.
 
+`porter` adds to that protocol, additively (`porter/runlog.py`, `porter/procs.py`):
+
+- The long commands (`port`, `install`, `tools --download`; CLI runs too) write a readable log, the lines the GUI's log pane shows plus a crash's traceback and the per-tool log folder (`<tid>_build/logs/`), to `<user dir>/logs/<YYYYmmdd-HHMMSS>-<command>.log`. The newest 30 logs are kept; older ones go when a run starts. A log names the keys file's path, never its contents.
+- With `--progress json` the first line is `{"ev": "log", "path": …}`. A failed run ends with `{"ev": "error", "msg", "type", "log"}` (`type` is `BuildError` for a reported error, else the exception's class), and `result` carries `log`.
+- A one-shot `--json` command (`doctor`, `profiles`, `inspect`, `devices`, `tools`) that crashes prints `{"error": "<Type>: <message>"}` on stdout, keeps the traceback on stderr and exits 1.
+- Stop channel, under `NX2A_GUI=1` (the GUI sets it): SIGTERM to porter's process group on POSIX, or a `stop` line on stdin on every OS, ends the run with exit code 130 after the log records `cancelled during <stage>`. EOF on stdin counts as a stop (the GUI is gone). On Windows porter joins a kill-on-close Job Object, so its children end with it. For `devices`, `install` and `port --install` the adb server is started (`adb start-server`) before that, outside the tree, so a stop never takes it down. Every run sets `MSBUILDDISABLENODEREUSE=1`, `DOTNET_CLI_USE_MSBUILD_SERVER=0` and `UseSharedCompilation=false`, so no MSBuild node outlives it.
+- A port writes `<tid>_build/.port-running` once its build folder is set up and removes it when the run ends, with success or a reported error. A port that finds it says the last port of the game was cut off and deletes every stage reuse key (`*.key`) outside `extract/`, so each cached stage runs again.
+
 ## What the player installs
 
 The player gets the bundle (`dist/nx2android-<version>.zip` from `python packaging/build_bundle.py`): unzip, start `nx2android.exe`, nothing to install with pip. It does not ship toolchains; the Setup tab (`nx2android.exe -m porter doctor`, or `python -m porter doctor` from the repository) checks them and the free disk space, and its **Download missing tools** button (`porter tools --download`, `porter/fetch.py`) fetches the missing NDK, .NET SDK and platform-tools from Google's SDK repository and Microsoft's release list, checks each archive against the checksum its list gives, and unpacks them into the player's nx2android folder (`toolchains/`), which the finders search:
@@ -90,7 +98,7 @@ The player gets the bundle (`dist/nx2android-<version>.zip` from `python packagi
 - **adb** (platform-tools), only to install from the tool.
 - Their own **prod.keys**. Keys and game files are never copied into the repository or the app.
 
-The player's settings, APK signing key and built translator live in their nx2android folder: `%APPDATA%\nx2android` on Windows, `~/Library/Application Support/nx2android` on a Mac, `~/.config/nx2android` elsewhere (`NX2A_HOME` overrides it). An app keeps the same signer across ports, so updates install over it.
+The player's settings, APK signing key, built translator and run logs (`logs/`) live in their nx2android folder: `%APPDATA%\nx2android` on Windows, `~/Library/Application Support/nx2android` on a Mac, `~/.config/nx2android` elsewhere (`NX2A_HOME` overrides it). An app keeps the same signer across ports, so updates install over it.
 
 ## Repository layout
 

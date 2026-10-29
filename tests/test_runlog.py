@@ -129,7 +129,7 @@ class Retention(InProcess):
         names = sorted(p.name for p in d.glob('*.log'))
         self.assertEqual(len(names), 30)
         self.assertTrue(names[-1].endswith('-install.log'))
-        self.assertEqual(names[0], '20200101-000005-port.log')
+        self.assertEqual(names[0], '20200101-000006-port.log')   # 29 old ones beside the new one: the 6 oldest are gone
 
 
 class OneShot(unittest.TestCase):

@@ -147,6 +147,7 @@ class Port:
         self.check_space()
         self.aw = self.work / 'android'; self.logs = self.work / 'logs'
         for d in (self.aw, self.logs, self.work / 'tmp'): d.mkdir(parents=True, exist_ok=True)
+        from porter import runlog; runlog.build_folder(self.work, self.logs)   # D-08: the cut-off marker, and the run log names the per-tool logs
         # DM_GAME picks the profile for every tool; WORK keeps their temporary folders inside the build folder (the shader translator writes thousands of files)
         self.env.update(DM_GAME=g.id, DM_ROOT=str(self.work), WORK=str(self.work / 'tmp'))
 
