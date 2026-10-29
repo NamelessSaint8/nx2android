@@ -5,13 +5,25 @@ import json, os, subprocess, sys
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 
-from porter.paths import REPO
+from porter import paths
+
+PORTER = ['-m', 'porter']   # tests point this at a stand-in (tests/test_bridge.py)
 
 
 def _env():
     e = QProcessEnvironment.systemEnvironment()
-    e.insert('PYTHONIOENCODING', 'utf-8'); e.insert('PYTHONUNBUFFERED', '1')
+    e.insert('PYTHONIOENCODING', 'utf-8'); e.insert('PYTHONUNBUFFERED', '1'); e.insert('NX2A_GUI', '1')   # porter's stop channel (porter/procs.py)
+    if not paths.FROZEN: e.insert('PYTHONPATH', os.pathsep.join(filter(None, [str(paths.REPO), e.value('PYTHONPATH')])))   # cwd no longer finds porter
     return e
+
+
+def _process(parent, args):
+    """Every porter process: run from the player's folder (never the bundle: it is read-only), on POSIX in its own session so a group signal
+    reaches dotnet, clang and the shader tools and never the GUI"""
+    p = QProcess(parent); p.setProgram(sys.executable); p.setArguments([*PORTER, *args])
+    p.setWorkingDirectory(str(paths.user_dir())); p.setProcessEnvironment(_env())
+    if os.name != 'nt': p.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
+    return p
 
 
 class Porter(QObject):
@@ -26,9 +38,7 @@ class Porter(QObject):
     def running(self): return self.p is not None and self.p.state() != QProcess.NotRunning
 
     def start(self, args):
-        self.p = QProcess(self); self.buf, self.err = b'', []
-        self.p.setProgram(sys.executable); self.p.setArguments(['-m', 'porter', *args])
-        self.p.setWorkingDirectory(str(REPO)); self.p.setProcessEnvironment(_env())
+        self.p = _process(self, args); self.buf, self.err = b'', []
         self.p.readyReadStandardOutput.connect(self._out)
         self.p.readyReadStandardError.connect(lambda: self.err.append(bytes(self.p.readAllStandardError()).decode('utf-8', 'replace')))
         self.p.finished.connect(self._done)
@@ -58,8 +68,7 @@ class Porter(QObject):
 
 def call_json(parent, args, done):
     """A short porter command that prints one JSON document: done(obj or None, exit code)"""
-    p = QProcess(parent)
-    p.setProgram(sys.executable); p.setArguments(['-m', 'porter', *args]); p.setWorkingDirectory(str(REPO)); p.setProcessEnvironment(_env())
+    p = _process(parent, args)
     def fin(code, _status):
         out = bytes(p.readAllStandardOutput()).decode('utf-8', 'replace')
         try: obj = json.loads(out)

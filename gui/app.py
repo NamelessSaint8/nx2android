@@ -75,13 +75,14 @@ class PortTab(QWidget):
         self.port_btn.clicked.connect(self.start)
         self.cancel_btn = QPushButton('Cancel'); self.cancel_btn.setEnabled(False); self.cancel_btn.clicked.connect(self.cancel)
         self.open_btn = QPushButton('Open output folder'); self.open_btn.setEnabled(False); self.open_btn.clicked.connect(self.open_out)
+        self.log_btn = QPushButton('Open log'); self.log_btn.setEnabled(False); self.log_btn.clicked.connect(self.open_log); self.log_path = self.error = None
         self.inst_btn = QPushButton('Install on device'); self.inst_btn.setEnabled(False); self.inst_btn.clicked.connect(self.install_now)
         for b in (self.port_btn, self.cancel_btn): bar.addWidget(b)
         bar.addStretch(1)
-        for b in (self.open_btn, self.inst_btn): bar.addWidget(b)
+        for b in (self.open_btn, self.log_btn, self.inst_btn): bar.addWidget(b)
         v.addLayout(bar)
 
-        self.step = QLabel(''); self.prog = QProgressBar(); self.prog.setTextVisible(True); self.prog.setRange(0, 1000); self.prog.setValue(0)
+        self.step = QLabel(''); self.step.setTextFormat(Qt.PlainText); self.prog = QProgressBar(); self.prog.setTextVisible(True); self.prog.setRange(0, 1000); self.prog.setValue(0)
         v.addWidget(self.step); v.addWidget(self.prog)
         split = QSplitter(Qt.Vertical)
         self.stages = QTreeWidget(); self.stages.setHeaderLabels(['', 'Stage', 'Result', 'Time']); self.stages.setRootIsDecorated(False)
@@ -165,8 +166,8 @@ class PortTab(QWidget):
 
     def run(self, args):
         self.stages.clear(); self.items = {}; self.log.clear(); self.prog.setValue(0); self.step.setText('starting…')
-        self.result = None; self.t0 = time.time(); self.cancelled = False
-        for b in (self.port_btn, self.open_btn, self.inst_btn): b.setEnabled(False)
+        self.result = None; self.t0 = time.time(); self.cancelled = False; self.log_path = self.error = None; self.args = args; self.red = ''
+        for b in (self.port_btn, self.open_btn, self.log_btn, self.inst_btn): b.setEnabled(False)
         self.cancel_btn.setEnabled(True)
         self.append('$ porter ' + ' '.join(f'"{a}"' if ' ' in a else a for a in args))
         self.porter.start(args)
@@ -205,8 +206,13 @@ class PortTab(QWidget):
             self.prog.setRange(0, 1000); self.prog.setValue(1000 if ok else 0)
         elif e == 'say':
             self.append(ev.get('msg', ''))
+            if ev.get('msg', '').startswith('[RED] '): self.red = ev['msg'].removeprefix('[RED] ')
+        elif e == 'log':
+            self.log_path = ev.get('path'); self.log_btn.setEnabled(bool(self.log_path))
+        elif e == 'error':
+            self.error = ev
         elif e == 'result':
-            self.result = ev
+            self.result = ev; self.log_path = ev.get('log') or self.log_path; self.log_btn.setEnabled(bool(self.log_path))
 
     def on_tick(self):   # the running stage's elapsed time
         if not self.porter.running(): return
@@ -222,11 +228,15 @@ class PortTab(QWidget):
             self.step.setText(f'done in {took}'); self.prog.setRange(0, 1000); self.prog.setValue(1000)
             if self.result: self.open_btn.setEnabled(True); self.inst_btn.setEnabled(True)
         else:
-            self.step.setText('cancelled' if self.cancelled or code == 130 else f'failed after {took} (the log says why)')
+            cause = (self.error or {}).get('msg') or self.red
+            self.step.setText('cancelled' if self.cancelled or code == 130 else f'failed after {took}' + (f': {cause}' if cause else ''))
             self.prog.setRange(0, 1000); self.prog.setValue(0)
 
     def open_out(self):
         if self.result: QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(self.result['apk']).parent)))
+
+    def open_log(self):
+        if self.log_path: QDesktopServices.openUrl(QUrl.fromLocalFile(self.log_path))
 
 
 # ---------------- Setup ----------------
