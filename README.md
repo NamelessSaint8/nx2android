@@ -58,13 +58,13 @@ The APK (`NeoTheWorldEndsWithYou.apk`) and the data pack (`NeoTheWorldEndsWithYo
 
 ```
 python -m pip install -r requirements.txt -r requirements-build.txt
-python packaging/build_bootloader.py
+python packaging/build_bootloader.py      (Windows only)
 python packaging/build_bundle.py
 ```
 
-`build_bootloader.py` compiles PyInstaller's launcher on this PC (it needs the Microsoft C++ Build Tools), because a few antivirus engines flag the prebuilt one every PyInstaller app shares. Run it again after installing or upgrading PyInstaller.
+On Windows, `build_bootloader.py` compiles PyInstaller's launcher on this PC (it needs the Microsoft C++ Build Tools), because a few antivirus engines flag the prebuilt one every PyInstaller app shares. Run it again after installing or upgrading PyInstaller. macOS and Linux use PyInstaller's own launcher.
 
-`dist/nx2android/` and `dist/nx2android-<version>.zip`: the app, the committed `nxnative/` and the install guide; no toolchains, keys or game files.
+`build_bundle.py` builds for the host it runs on: `dist/nx2android-<version>-<os>-<arch>.<zip|dmg|tar.gz>` (`windows-x64.zip`, `macos-arm64.dmg` holding `nx2android.app`, `linux-x64.tar.gz`, `linux-arm64.tar.gz`), with the app, the committed `nxnative/` and the install guide; no toolchains, keys or game files. `python packaging/smoke_bundle.py <archive or bundle folder>` checks it from a read-only copy.
 
 ## Tests
 
