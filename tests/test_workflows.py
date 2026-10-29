@@ -147,7 +147,7 @@ class Release(unittest.TestCase):   # fork-release.yml: who can start it, where 
         b = self.job('build'); inc = b['strategy']['matrix']['include']
         self.assertIs(b['strategy']['fail-fast'], False)
         self.assertEqual({m['os'] for m in inc}, {'windows-2025', 'ubuntu-22.04', 'ubuntu-24.04-arm'})
-        self.assertEqual({m['os']: str(m['floor']) for m in inc if 'floor' in m}, {'ubuntu-22.04': '2.34', 'ubuntu-24.04-arm': '2.39'})
+        self.assertEqual({m['os']: str(m['floor']) for m in inc if 'floor' in m}, {'ubuntu-22.04': '2.35', 'ubuntu-24.04-arm': '2.39'})
         for w in ('build_bundle.py', 'smoke_bundle.py', 'glibc_floor.py', 'build_bootloader.py', '--require-hashes -r requirements.txt -r requirements-build.txt'):
             self.assertTrue(self.ran('build', w), w)
         self.assertTrue(self.ran('macos', '--require-hashes -r requirements.txt -r requirements-build.txt'))

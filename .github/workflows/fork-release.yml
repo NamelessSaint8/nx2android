@@ -30,7 +30,7 @@ jobs:
       matrix:
         include:
           - { os: windows-2025, target: windows-x64 }
-          - { os: ubuntu-22.04, target: linux-x64, floor: '2.34' }        # PKG-03 names glibc 2.34
+          - { os: ubuntu-22.04, target: linux-x64, floor: '2.35' }        # the runner's libpython, libgcc_s, cairo, tcl, tk need 2.35
           - { os: ubuntu-24.04-arm, target: linux-arm64, floor: '2.39' }  # the arm64 PySide6 wheel alone needs GLIBC_2.38
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

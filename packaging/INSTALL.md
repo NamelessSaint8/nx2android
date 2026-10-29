@@ -14,7 +14,7 @@ A few antivirus engines may flag `nx2android.exe` (on VirusTotal, 3 of 69 flagge
 
 **macOS 14 or later on Apple Silicon.** Open `nx2android-<version>-macos-arm64.dmg`, drag **nx2android** onto **Applications**, and start it from Applications (not from the disk image). The app is signed and notarized by Apple, so it opens without a warning. The first time you pick a game folder in Documents, Downloads, the Desktop or on an external drive, macOS asks whether nx2android may read it: allow it.
 
-**Linux x64 (glibc 2.34 or later) and Linux arm64 (glibc 2.39 or later)**, for example Ubuntu 24.04 or later, Debian 13 or Fedora 40 or later. Unpack the archive and start the app:
+**Linux x64 with glibc 2.35 or later** (for example Ubuntu 22.04, Debian 12 or Fedora 36, or later) **and Linux arm64 with glibc 2.39 or later** (for example Ubuntu 24.04, Debian 13 or Fedora 40, or later). Unpack the archive and start the app:
 
 ```
 tar xzf nx2android-<version>-linux-<arch>.tar.gz

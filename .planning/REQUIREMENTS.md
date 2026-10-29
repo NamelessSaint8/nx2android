@@ -62,7 +62,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 
 - [x] **PKG-01**: User on Windows x64 can unzip the bundle and run it without installing Python
 - [ ] **PKG-02**: User on macOS 14+ (Apple Silicon) can download the DMG in a browser and open the Developer ID-signed, notarized, stapled `.app` from Finder without Gatekeeper warnings
-- [x] **PKG-03**: User on Linux x64 (glibc 2.34+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
+- [x] **PKG-03**: User on Linux x64 (glibc 2.35+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [x] **PKG-04**: User on Linux arm64 (glibc 2.39+: Ubuntu 24.04+, Debian 13, Fedora 40+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [x] **PKG-05**: The bundle never writes into its own folder; it runs from a read-only location, and the macOS signature still verifies after a full port
 - [x] **PKG-06**: Python dependencies are pinned in a hashed universal lockfile, with build and dev requirements declared separately

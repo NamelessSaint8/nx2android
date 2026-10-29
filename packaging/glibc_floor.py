@@ -1,7 +1,7 @@
 # The newest GLIBC_ symbol version any ELF in a Linux bundle needs, and a gate on it:
-#   python packaging/glibc_floor.py dist/nx2android 2.34      (exit 1 above the floor)
-# The x64 bundle is gated at 2.34 and the arm64 bundle at 2.39 (the arm64 PySide6 wheel alone needs GLIBC_2.38); the first release run measures the
-# real x64 value (RESEARCH Open Question 4). Needs binutils' objdump.
+#   python packaging/glibc_floor.py dist/nx2android 2.35      (exit 1 above the floor)
+# The x64 bundle is gated at 2.35 (the ubuntu-22.04 runner's libpython, libgcc_s, cairo, tcl and tk need it) and the arm64 bundle at 2.39
+# (the arm64 PySide6 wheel alone needs GLIBC_2.38). Needs binutils' objdump.
 import re, subprocess, sys
 from pathlib import Path
 
@@ -24,7 +24,7 @@ def objdump(root):
 
 
 def main(argv, texts=None):
-    if len(argv) != 3: sys.exit('usage: python packaging/glibc_floor.py <bundle folder> <floor, e.g. 2.34>')
+    if len(argv) != 3: sys.exit('usage: python packaging/glibc_floor.py <bundle folder> <floor, e.g. 2.35>')
     n = need(objdump(argv[1]) if texts is None else texts); floor = tuple(int(x) for x in argv[2].split('.'))
     top = max(n, default=(0, 0))
     print(f'glibc floor {top[0]}.{top[1]}: {", ".join(sorted(n.get(top, ()))[:5])}' + (f'  [RED] above {argv[2]}' if top > floor else ''))
