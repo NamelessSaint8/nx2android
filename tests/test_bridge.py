@@ -1,7 +1,7 @@
 # The GUI side of the bridge (gui/runner.py, gui/app.py), headless (QT_QPA_PLATFORM=offscreen): a failed run shows its cause and opens its log,
 # Cancel stops the whole tree and says "cancelled" only once it is gone, closing the window mid-run asks first. A stand-in porter
 # (tests/fixtures/bridge/fake_porter.py, via runner.PORTER) plays the long runs; the Errors tests run the real porter on an empty folder.
-import json, os, subprocess, sys, tempfile, time, unittest
+import json, os, re, subprocess, sys, tempfile, time, unittest
 from pathlib import Path
 from unittest import mock
 
@@ -385,6 +385,57 @@ class Timeout(Fake):   # a one-shot that never answers is killed at its own limi
 
     def test_default_limits(self):
         self.assertEqual(runner.TIMEOUTS, {'devices': 15, 'doctor': 30, 'inspect': 60, 'profiles': 20, 'tools': 60})
+
+
+FIXTURES = REPO / 'tests/fixtures/bridge'
+
+
+class Replay(unittest.TestCase):   # golden JSON-lines streams (tests/fixtures/bridge/record.py) through runner.Porter: the protocol the GUI parses
+    def setUp(self):
+        keep = runner.PORTER; self.addCleanup(setattr, runner, 'PORTER', keep)
+
+    def replay(self, name, code=0):   # the events and the exit code runner.Porter gives for the fixture
+        runner.PORTER = [FAKE, '--fixture', str(FIXTURES / name), '--exit', str(code), '--']
+        p = runner.Porter(); evs = []; p.event.connect(evs.append); fin = QSignalSpy(p.finished)
+        p.start(['port'])
+        self.assertTrue(fin.wait(10000))
+        return evs, fin.at(0)[0]
+
+    def golden(self, name):   # every non-blank line is one JSON object
+        rows = [json.loads(ln) for ln in (FIXTURES / name).read_text(encoding='utf-8').splitlines() if ln.strip()]
+        self.assertTrue(rows and all(isinstance(r, dict) for r in rows), name)
+        return rows
+
+    def test_port_ok(self):
+        evs, code = self.replay('port_ok.jsonl')
+        self.assertEqual((evs, code), (self.golden('port_ok.jsonl'), 0))
+        self.assertEqual(evs[0]['ev'], 'log')
+        self.assertEqual(evs[-1]['ev'], 'result')
+        self.assertTrue({'apk', 'data', 'log'} <= evs[-1].keys())
+
+    def test_port_build_error(self):
+        evs, code = self.replay('port_build_error.jsonl', 1)
+        self.assertEqual((evs, code), (self.golden('port_build_error.jsonl'), 1))
+        self.assertEqual((evs[-1]['ev'], evs[-1]['type']), ('error', 'BuildError'))
+
+    def test_install_ok(self):
+        evs, code = self.replay('install_ok.jsonl')
+        self.assertEqual((evs, code), (self.golden('install_ok.jsonl'), 0))
+        kinds = [e['ev'] for e in evs if e['ev'] in ('stage', 'step', 'stage_end')]
+        self.assertEqual((kinds[0], kinds[-1]), ('stage', 'stage_end'))
+        self.assertIn('step', kinds)
+        self.assertTrue(all(e['name'] == 'install' for e in evs if e['ev'] in ('stage', 'step', 'stage_end')))
+
+    def test_edge_lines(self):   # a non-JSON line and a JSON array become say, a blank line nothing, a last line with no newline still arrives
+        evs, code = self.replay('edge.jsonl')
+        self.assertEqual(evs, [{'ev': 'say', 'msg': 'porter 1.2 starting'}, {'ev': 'say', 'msg': '["not", "an", "event"]'}, {'ev': 'say', 'msg': 'last'}])
+        self.assertEqual(code, 0)
+
+    def test_fixtures_are_scrubbed(self):   # the fixtures are public: no user paths, no key material
+        bad = re.compile(r'/Users/|/home/|C:\\\\Users|C:\\Users|AppData|prod\.keys\s*[=:]\s*[0-9a-fA-F]{16}|\b[0-9a-fA-F]{32}\b')
+        for f in sorted(FIXTURES.iterdir()):
+            if f.is_file():
+                with self.subTest(f.name): self.assertIsNone(bad.search(f.read_text(encoding='utf-8', errors='replace')), f.name)
 
 
 if __name__ == '__main__': unittest.main()

@@ -1,0 +1,16 @@
+{"ev": "log", "path": "<home>/logs/20261029-052937-install.log", "t": 1793266177.213}
+{"ev": "stage", "k": 1, "n": 1, "name": "install", "step": "finding the device", "t": 1793266177.213}
+{"ev": "progress", "k": 1, "name": "install", "step": "finding the device", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.214}
+{"ev": "say", "msg": "[05:29:37] device: Tablet (SERIAL0001), GPU Adreno (TM) 740", "t": 1793266177.214}
+{"ev": "step", "k": 1, "name": "install", "step": "installing Game.apk", "t": 1793266177.214}
+{"ev": "progress", "k": 1, "name": "install", "step": "installing Game.apk", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.214}
+{"ev": "step", "k": 1, "name": "install", "step": "letting the app create its files folder", "t": 1793266177.214}
+{"ev": "progress", "k": 1, "name": "install", "step": "letting the app create its files folder", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.214}
+{"ev": "step", "k": 1, "name": "install", "step": "pushing the game data", "t": 1793266177.214}
+{"ev": "progress", "k": 1, "name": "install", "step": "pushing the game data", "done": 0, "total": 3000000000, "unit": "B", "est": false, "note": "", "frac": 0.0, "eta": null, "elapsed": 0.0, "t": 1793266177.214}
+{"ev": "progress", "k": 1, "name": "install", "step": "pushing the game data", "done": 1500000000, "total": 3000000000, "unit": "B", "est": false, "note": "12 of 24 pieces", "frac": 0.5, "eta": null, "elapsed": 0.559, "t": 1793266177.773}
+{"ev": "progress", "k": 1, "name": "install", "step": "pushing the game data", "done": 3000000000, "total": 3000000000, "unit": "B", "est": false, "note": "24 of 24 pieces", "frac": 0.99, "eta": null, "elapsed": 1.114, "t": 1793266178.328}
+{"ev": "step", "k": 1, "name": "install", "step": "removing 3 stale files", "t": 1793266178.328}
+{"ev": "progress", "k": 1, "name": "install", "step": "removing 3 stale files", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 1.114, "t": 1793266178.328}
+{"ev": "stage_end", "k": 1, "name": "install", "ok": true, "summary": "Game on Tablet", "elapsed": 1.114, "t": 1793266178.328}
+{"ev": "say", "msg": "[05:29:38] installed: open \"Game\" on the device", "t": 1793266178.328}

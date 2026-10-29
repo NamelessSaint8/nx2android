@@ -1,0 +1,38 @@
+{"ev": "log", "path": "<home>/logs/20261029-052934-port.log", "t": 1793266174.898}
+{"ev": "say", "msg": "[05:29:34] game folder: <folder>", "t": 1793266174.898}
+{"ev": "stage", "k": 1, "n": 9, "name": "build nx_extract", "step": "", "t": 1793266174.898}
+{"ev": "progress", "k": 1, "name": "build nx_extract", "step": "", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266174.898}
+{"ev": "stage_end", "k": 1, "name": "build nx_extract", "ok": true, "summary": "", "elapsed": 0.0, "t": 1793266174.898}
+{"ev": "stage", "k": 2, "n": 9, "name": "extract 1.0.0", "step": "", "t": 1793266174.898}
+{"ev": "progress", "k": 2, "name": "extract 1.0.0", "step": "", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266174.898}
+{"ev": "step", "k": 2, "name": "extract 1.0.0", "step": "extract 1.0.0: working", "t": 1793266174.898}
+{"ev": "progress", "k": 2, "name": "extract 1.0.0", "step": "extract 1.0.0: working", "done": 0, "total": 3000000000, "unit": "B", "est": false, "note": "", "frac": 0.0, "eta": null, "elapsed": 0.0, "t": 1793266174.898}
+{"ev": "progress", "k": 2, "name": "extract 1.0.0", "step": "extract 1.0.0: working", "done": 1500000000, "total": 3000000000, "unit": "B", "est": false, "note": "", "frac": 0.5, "eta": null, "elapsed": 0.555, "t": 1793266175.453}
+{"ev": "progress", "k": 2, "name": "extract 1.0.0", "step": "extract 1.0.0: working", "done": 3000000000, "total": 3000000000, "unit": "B", "est": false, "note": "", "frac": 0.99, "eta": null, "elapsed": 1.106, "t": 1793266176.004}
+{"ev": "stage_end", "k": 2, "name": "extract 1.0.0", "ok": true, "summary": "9,412 files", "elapsed": 1.106, "t": 1793266176.005}
+{"ev": "stage", "k": 3, "n": 9, "name": "extract 1.1.0", "step": "", "t": 1793266176.005}
+{"ev": "progress", "k": 3, "name": "extract 1.1.0", "step": "", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266176.005}
+{"ev": "stage_end", "k": 3, "name": "extract 1.1.0", "ok": true, "summary": "1,107 files", "elapsed": 0.0, "t": 1793266176.005}
+{"ev": "stage", "k": 4, "n": 9, "name": "rewrite", "step": "checking the inputs", "t": 1793266176.006}
+{"ev": "progress", "k": 4, "name": "rewrite", "step": "checking the inputs", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "stage_end", "k": 4, "name": "rewrite", "ok": true, "summary": "2 module(s)", "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "stage", "k": 5, "n": 9, "name": "shader split", "step": "checking the inputs", "t": 1793266176.006}
+{"ev": "progress", "k": 5, "name": "shader split", "step": "checking the inputs", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "stage_end", "k": 5, "name": "shader split", "ok": true, "summary": "1,234 shaders", "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "stage", "k": 6, "n": 9, "name": "Vulkan shaders", "step": "building the translator", "t": 1793266176.006}
+{"ev": "progress", "k": 6, "name": "Vulkan shaders", "step": "building the translator", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "step", "k": 6, "name": "Vulkan shaders", "step": "Vulkan shaders: working", "t": 1793266176.006}
+{"ev": "progress", "k": 6, "name": "Vulkan shaders", "step": "Vulkan shaders: working", "done": 0, "total": 1234, "unit": "shaders", "est": false, "note": "", "frac": 0.0, "eta": null, "elapsed": 0.0, "t": 1793266176.006}
+{"ev": "progress", "k": 6, "name": "Vulkan shaders", "step": "Vulkan shaders: working", "done": 617, "total": 1234, "unit": "shaders", "est": false, "note": "", "frac": 0.5, "eta": null, "elapsed": 0.56, "t": 1793266176.566}
+{"ev": "progress", "k": 6, "name": "Vulkan shaders", "step": "Vulkan shaders: working", "done": 1234, "total": 1234, "unit": "shaders", "est": false, "note": "", "frac": 0.99, "eta": null, "elapsed": 1.113, "t": 1793266177.118}
+{"ev": "stage_end", "k": 6, "name": "Vulkan shaders", "ok": true, "summary": "1,234 shaders", "elapsed": 1.113, "t": 1793266177.118}
+{"ev": "stage", "k": 7, "n": 9, "name": "host", "step": "NDK android-ndk-r27c", "t": 1793266177.118}
+{"ev": "progress", "k": 7, "name": "host", "step": "NDK android-ndk-r27c", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "stage_end", "k": 7, "name": "host", "ok": true, "summary": "3.1 MB", "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "stage", "k": 8, "n": 9, "name": "APK", "step": "", "t": 1793266177.118}
+{"ev": "progress", "k": 8, "name": "APK", "step": "", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "stage_end", "k": 8, "name": "APK", "ok": true, "summary": "Game.apk, 4.0 MB", "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "stage", "k": 9, "n": 9, "name": "data pack", "step": "linking", "t": 1793266177.118}
+{"ev": "progress", "k": 9, "name": "data pack", "step": "linking", "done": null, "total": null, "unit": "", "est": false, "note": "", "frac": null, "eta": null, "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "stage_end", "k": 9, "name": "data pack", "ok": true, "summary": "9,412 files, 2.8 GB", "elapsed": 0.0, "t": 1793266177.118}
+{"ev": "result", "apk": "<folder>/Game.apk", "data": "<folder>/Game-data", "title_id": "0100000000010000", "name": "Game", "package": "com.nx2android.game", "version": "1.1.0", "display": "1.1.0", "language": "en", "status": "playable", "derived": false, "installed": false, "log": "<home>/logs/20261029-052934-port.log", "t": 1793266177.119}

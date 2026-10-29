@@ -1,0 +1,3 @@
+{"ev": "log", "path": "<home>/logs/20261029-052938-port.log", "t": 1793266178.392}
+{"ev": "say", "msg": "[RED] not a folder: <folder>/missing", "t": 1793266178.42}
+{"ev": "error", "msg": "not a folder: <folder>/missing", "type": "BuildError", "log": "<home>/logs/20261029-052938-port.log", "t": 1793266178.42}
