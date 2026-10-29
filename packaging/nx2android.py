@@ -6,6 +6,7 @@ import multiprocessing, multiprocessing.spawn, os, runpy, sys
 
 
 def main():
+    sys.dont_write_bytecode = True   # frozen apps already have it; explicit because the bundle must never write beside its own files (PKG-05)
     multiprocessing.freeze_support()   # a tool's pool worker (shader_split.py) starts here and runs its work in there
     # A frozen Windows program does not send pool workers the main script's path (multiprocessing.spawn WINEXE), so a worker could not find the tool's
     # functions; with it, the worker loads the tool as __mp_main__ as an ordinary Python does

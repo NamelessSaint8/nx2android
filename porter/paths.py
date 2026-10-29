@@ -39,6 +39,10 @@ def _engine():
     except OSError:
         if not (dst / 'nxnative').is_dir(): raise
         shutil.rmtree(tmp, ignore_errors=True)   # another porter got there first
+    # the copies of other bundle versions go once this one is in place; a same-id temp folder may be another porter still copying
+    # shortcut: a same-id temp folder left by a copy that was killed stays until the next version, upgrade if disk use is reported
+    for p in base.iterdir():
+        if p.name != eid and not p.name.startswith(f'{eid}.tmp-'): shutil.rmtree(p, ignore_errors=True)
     return dst / 'nxnative'
 
 
