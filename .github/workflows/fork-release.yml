@@ -159,6 +159,8 @@ jobs:
           rm -f "$RUNNER_TEMP/cert.p12" "$RUNNER_TEMP/key.p8"
 
   upstream-diff:   # CI-04: a report, not a gate; the developer reviews it at upstream merges
+    # WR-04: release needs it, so a failed fetch (network, a renamed or private upstream) or no merge base must not block the signed bundles' draft
+    continue-on-error: true
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:

@@ -132,6 +132,7 @@ class Release(unittest.TestCase):   # fork-release.yml: who can start it, where 
         self.assertEqual(r['permissions'], {'contents': 'write'})
         self.assertIn("startsWith(github.ref, 'refs/tags/')", r['if'])
         self.assertEqual(set(r['needs']), {'build', 'macos', 'upstream-diff'})
+        self.assertIs(self.job('upstream-diff').get('continue-on-error'), True)   # WR-04: the report never holds up the draft
 
     def test_macos_signs_and_notarizes(self):
         runs = '\n'.join(self.runs('macos'))
