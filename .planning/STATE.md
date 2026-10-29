@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-10-29T08:43:06.582Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-10-29T08:54:12.488Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 6b190f920b969774c409674a406d81bcd6589134
+state_head: 914249fb3a1c02f3aed9bf926b050dcf6c70ece3
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 01 execution started
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 |------|----------|-------|-------|
 | Phase 01 P01 | resumed | 3 tasks | 8 files |
 | Phase 01 P05 | 3 min | 2 tasks | 3 files |
+| Phase 01 P02 | 7 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Runtime, build and dev deps each get their own .in and hashed uv lock; build/dev locks constrained by requirements.txt
 - [Phase 01]: 01-05: frozen porter builds from <user dir>/engine/<ENGINE id>/nxnative; a missing or non-alphanumeric ENGINE id falls back to the bundle's own nxnative
 - [Phase 01]: 01-05: other engine versions are pruned only by the start that installs a copy
+- [Phase 01]: 01-02: runlog prints its own log and error events, so a failed porter.upstream import still names its log
+- [Phase 01]: 01-02: the cut-off key sweep prunes the top-level extract/ folder and never walks the extracted RomFS
+- [Phase 01]: 01-02: LOGS_KEPT = 30 counts the new log (29 old ones stay)
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T08:43:06.566Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-10-29T08:54:12.472Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
