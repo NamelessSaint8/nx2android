@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
-status: executing
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-10-29T16:03:58.778Z"
+status: verifying
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-10-29T19:28:39.931Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 4d9e2132d27daa87a610315db2254a076fc1115e
+state_head: 78d7e2bb98831154d8aa019b25c28d76b8d0e9b4
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
 Plan: 8 of 8
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-29 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | 10min | 3 tasks | 5 files |
 | Phase 01 P04 | 11min | 3 tasks | 11 files |
 | Phase 01 P07 | 2 fix rounds | 3 tasks | 12 files |
+| Phase 01 P08 | 3 sessions | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 01]: 01-04: port_build_error.jsonl records a port of a missing folder (machine-independent, names the folder); fake_porter --hang makes a one-shot hang
 - [Phase 01]: The GUI needs Python 3.12+ (PySide6 6.12 drops a ref on True per signal emit, aborting 3.11); the CLI keeps 3.11+. Supersedes the GUI part of 'Python 3.11+ for dev runs'
 - [Phase 01]: test_bridge skips on Python < 3.12 in CI too: a declared version floor, a deliberate exception to TEST-02's fail-in-CI rule
+- [Phase 01]: Linux x64 floor is glibc 2.35 (PKG-03), not 2.34: the ubuntu-22.04 runner's libpython, libgcc_s, cairo, tcl and tk need it; user chose this over a container build or trimming (supersedes RESEARCH Open Question 4)
+- [Phase 01]: fork-release retries stapler staple up to 4 times; notarization itself is not retried
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T16:03:58.760Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-10-29T19:28:39.913Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None

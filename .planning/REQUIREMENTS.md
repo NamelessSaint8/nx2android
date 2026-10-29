@@ -61,7 +61,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 ### Packaging
 
 - [x] **PKG-01**: User on Windows x64 can unzip the bundle and run it without installing Python
-- [ ] **PKG-02**: User on macOS 14+ (Apple Silicon) can download the DMG in a browser and open the Developer ID-signed, notarized, stapled `.app` from Finder without Gatekeeper warnings
+- [x] **PKG-02**: User on macOS 14+ (Apple Silicon) can download the DMG in a browser and open the Developer ID-signed, notarized, stapled `.app` from Finder without Gatekeeper warnings
 - [x] **PKG-03**: User on Linux x64 (glibc 2.35+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [x] **PKG-04**: User on Linux arm64 (glibc 2.39+: Ubuntu 24.04+, Debian 13, Fedora 40+) can unpack the `tar.gz` bundle and run it under X11 and Wayland
 - [x] **PKG-05**: The bundle never writes into its own folder; it runs from a read-only location, and the macOS signature still verifies after a full port
@@ -71,9 +71,9 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 ### CI
 
 - [x] **CI-01**: Every push runs the test suite on Windows, macOS, Linux x64 and Linux arm64
-- [ ] **CI-02**: A release workflow builds all four bundles, signs and notarizes the macOS one, and smoke-tests each frozen bundle
-- [ ] **CI-03**: Signing secrets live in a protected release environment, actions are pinned by SHA, and pull-request workflows cannot reach secrets
-- [ ] **CI-04**: CI checks the Linux bundles' glibc symbol floor and reports the `nxnative/` diff against upstream
+- [x] **CI-02**: A release workflow builds all four bundles, signs and notarizes the macOS one, and smoke-tests each frozen bundle
+- [x] **CI-03**: Signing secrets live in a protected release environment, actions are pinned by SHA, and pull-request workflows cannot reach secrets
+- [x] **CI-04**: CI checks the Linux bundles' glibc symbol floor and reports the `nxnative/` diff against upstream
 
 ### Host toolchains
 
@@ -198,16 +198,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FRUN-03 | Phase 3 | Pending |
 | DIAG-01 | Phase 5 | Pending |
 | PKG-01 | Phase 1 | Complete |
-| PKG-02 | Phase 1 | Pending |
+| PKG-02 | Phase 1 | Complete |
 | PKG-03 | Phase 1 | Complete |
 | PKG-04 | Phase 1 | Complete |
 | PKG-05 | Phase 1 | Complete |
 | PKG-06 | Phase 1 | Complete |
 | PKG-07 | Phase 2 | Pending |
 | CI-01 | Phase 1 | Complete |
-| CI-02 | Phase 1 | Pending |
-| CI-03 | Phase 1 | Pending |
-| CI-04 | Phase 1 | Pending |
+| CI-02 | Phase 1 | Complete |
+| CI-03 | Phase 1 | Complete |
+| CI-04 | Phase 1 | Complete |
 | TOOL-01 | Phase 3 | Pending |
 | TOOL-02 | Phase 3 | Pending |
 | TOOL-03 | Phase 3 | Pending |
