@@ -1,7 +1,7 @@
 # Every porter run the GUI starts (NX2A_GUI=1) stops as one tree (D-05, D-09): on POSIX by the session gui/runner.py starts it in, on Windows by a
 # Job Object porter joins itself, because PySide6 cannot start a process in a new console group (no CTRL_BREAK). The stop request is SIGTERM to the group,
 # or a "stop" line on stdin on every OS (EOF too: the GUI is gone). The adb server is started first, outside both, so a cancel never takes it down.
-import os, signal, subprocess, threading
+import json, os, signal, subprocess, threading
 
 KILL_ON_JOB_CLOSE, EXTENDED_LIMITS = 0x00002000, 9   # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JobObjectExtendedLimitInformation; never BREAKAWAY_OK (0x800)
 
@@ -19,7 +19,7 @@ def setup(a, on_stop):
         try: job = _job()
         except OSError as e: note = f'Windows job: not available ({e})'
     else: signal.signal(signal.SIGTERM, _term)
-    threading.Thread(target=_watch, args=(job, on_stop), daemon=True).start()
+    threading.Thread(target=_watch, args=(job, on_stop, getattr(a, 'progress', None) == 'json'), daemon=True).start()
     return note
 
 
@@ -67,7 +67,7 @@ def _job():
     return job
 
 
-def _watch(job, on_stop):
+def _watch(job, on_stop, as_json=False):
     """Wait for "stop" or EOF on stdin. os.read on the raw fd: a daemon thread blocked in sys.stdin can abort interpreter shutdown"""
     buf = b''
     while b'stop' not in buf:
@@ -77,5 +77,8 @@ def _watch(job, on_stop):
         buf += chunk
     if os.name != 'nt': os.killpg(os.getpgid(0), signal.SIGTERM); return   # the same signal the GUI's own stop sends
     on_stop()   # the stage it was in goes into the log, which is closed: nothing in porter runs after the job ends
+    # the line POSIX's KeyboardInterrupt path prints (cli._with_progress): the GUI shows the same stop on Windows
+    try: print(json.dumps({'ev': 'say', 'msg': '[RED] interrupted'}) if as_json else '[RED] interrupted', flush=True)
+    except (OSError, ValueError): pass   # stdout gone with the GUI (EOF): the job must still end
     if job: _k().TerminateJobObject(job, 130)
     os._exit(130)
