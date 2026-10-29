@@ -75,7 +75,7 @@ class PortTab(QWidget):
         self.port_btn.clicked.connect(self.start)
         self.cancel_btn = QPushButton('Cancel'); self.cancel_btn.setEnabled(False); self.cancel_btn.clicked.connect(self.cancel)
         self.open_btn = QPushButton('Open output folder'); self.open_btn.setEnabled(False); self.open_btn.clicked.connect(self.open_out)
-        self.log_btn = QPushButton('Open log'); self.log_btn.setEnabled(False); self.log_btn.clicked.connect(self.open_log); self.log_path = self.error = None
+        self.log_btn = QPushButton('Open log'); self.log_btn.setEnabled(False); self.log_btn.clicked.connect(self.open_log); self.log_path = self.error = None; self.args = []
         self.inst_btn = QPushButton('Install on device'); self.inst_btn.setEnabled(False); self.inst_btn.clicked.connect(self.install_now)
         for b in (self.port_btn, self.cancel_btn): bar.addWidget(b)
         bar.addStretch(1)
@@ -262,6 +262,7 @@ class SetupTab(QWidget):
         self.dl_step = QLabel(''); self.dl_prog = QProgressBar(); self.dl_prog.setRange(0, 1000); self.dl_prog.setVisible(False)
         dl.addWidget(self.dl_btn); dl.addWidget(self.dl_step, 1); dl.addWidget(self.dl_prog, 1); gl.addLayout(dl)
         self.fetch = Porter(self); self.fetch.event.connect(self.on_fetch); self.fetch.finished.connect(self.fetched)
+        self.dl_errors, self.dl_log, self.dl_error = [], None, None; self.dl_step.linkActivated.connect(self.open_dl_log)
         v.addWidget(g)
         s = QGroupBox('Settings'); f = QFormLayout(s); self.edits = {}
         for key, label, kind in self.FIELDS:
@@ -287,7 +288,8 @@ class SetupTab(QWidget):
                           '<p>They come from their makers under their own licenses: downloading them means you accept those.</p>', QMessageBox.Yes | QMessageBox.No, self)
         box.setTextFormat(Qt.RichText)
         if box.exec() != QMessageBox.Yes: return
-        self.dl_btn.setEnabled(False); self.dl_prog.setVisible(True); self.dl_prog.setRange(0, 0); self.dl_errors = []
+        self.dl_btn.setEnabled(False); self.dl_prog.setVisible(True); self.dl_prog.setRange(0, 0); self.dl_errors, self.dl_log, self.dl_error = [], None, None
+        self.dl_step.setTextFormat(Qt.PlainText)
         self.fetch.start(['tools', '--download', '--progress', 'json'])
 
     def on_fetch(self, ev):
@@ -299,12 +301,21 @@ class SetupTab(QWidget):
             if ev.get('frac') is not None: self.dl_prog.setRange(0, 1000); self.dl_prog.setValue(int(ev['frac'] * 1000))
             else: self.dl_prog.setRange(0, 0)
         elif e == 'say' and ev.get('msg', '').startswith('[RED] '): self.dl_errors.append(ev['msg'].removeprefix('[RED] '))
+        elif e == 'log': self.dl_log = ev.get('path')
+        elif e == 'error': self.dl_error = ev
 
     def fetched(self, code):
         self.dl_btn.setEnabled(True); self.dl_prog.setVisible(False)
-        self.dl_step.setText('the tools are ready' if code == 0 else 'the download failed')
-        if code: QMessageBox.warning(self, 'Download', '\n'.join(self.dl_errors) or 'The download failed.')
+        if code in (0, 130): self.dl_step.setText('the tools are ready' if code == 0 else 'cancelled')
+        else:   # the cause inline, escaped like the Port tab's log pane, with the saved log one click away (no dialog)
+            msg = (self.dl_error or {}).get('msg') or '\n'.join(self.dl_errors) or 'the download failed'
+            self.dl_step.setTextFormat(Qt.RichText)
+            self.dl_step.setText('<span style="color:#c62828">' + msg.replace('&', '&amp;').replace('<', '&lt;').replace('\n', '<br>') + '</span>'
+                                 + (' &nbsp;<a href="log">Open log</a>' if self.dl_log else ''))
         self.load()
+
+    def open_dl_log(self, _link):
+        if self.dl_log: QDesktopServices.openUrl(QUrl.fromLocalFile(self.dl_log))
 
     def pick(self, key, kind):
         e = self.edits[key]
@@ -365,7 +376,31 @@ class Window(QMainWindow):
         self.port = PortTab(self); self.setup = SetupTab(self); self.games = GamesTab()
         self.tabs.addTab(self.port, 'Port'); self.tabs.addTab(self.setup, 'Setup'); self.tabs.addTab(self.games, 'Games')
         self.setCentralWidget(self.tabs)
-        self.first = True
+        self.first = True; self.quitting = False
+        for p in (self.port.porter, self.setup.fetch): p.finished.connect(self.run_ended)
+
+    def runs(self): return [p for p in (self.port.porter, self.setup.fetch) if p.running()]
+
+    def run_ended(self, _code):   # Stop and quit: the window closes itself once nothing runs
+        if self.quitting and not self.runs(): self.close()
+
+    def ask_stop(self, installing):
+        box = QMessageBox(QMessageBox.Warning, 'nx2android', 'A port, an install or a tool download is still running. Stop it and quit?'
+                          + (' The app on the device may be left half-installed.' if installing else ''), parent=self)
+        stop = box.addButton('Stop and quit', QMessageBox.DestructiveRole); keep = box.addButton('Keep running', QMessageBox.RejectRole)
+        box.setDefaultButton(keep); box.exec()
+        return box.clickedButton() is stop
+
+    def closeEvent(self, e):   # D-06, D-07: never orphan a port, an install or a download
+        runs = self.runs()
+        if not runs: e.accept(); return
+        e.ignore()
+        if self.quitting: return   # already stopping
+        a = self.port.args
+        if not self.ask_stop(self.port.porter.running() and (a[:1] == ['install'] or '--install' in a)): return
+        self.quitting = True
+        for p in runs: p.stop()
+        self.port.step.setText('stopping…')
 
     def set_ready(self, ok):   # the first check: a missing requirement opens the Setup tab
         if self.first and not ok: self.tabs.setCurrentWidget(self.setup)

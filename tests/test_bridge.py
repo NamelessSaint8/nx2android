@@ -18,9 +18,9 @@ for _m in ('PySide6.QtWidgets', 'lz4.block', 'capstone'):
         MISSING = MISSING or _m.split('.')[0]
 
 HOME = tempfile.mkdtemp()
-os.environ['NX2A_HOME'] = HOME   # before gui.app: the porters it starts read their settings from here
 if not MISSING:
     from PySide6.QtTest import QSignalSpy, QTest
+    from PySide6.QtCore import QProcess
     from PySide6.QtWidgets import QApplication, QMessageBox
     from gui import app, runner
     from porter import paths
@@ -30,6 +30,7 @@ APP = None
 def setUpModule():
     global APP
     if MISSING: raise unittest.SkipTest(f'{MISSING} is not installed (python -m pip install -r requirements.txt)')
+    os.environ['NX2A_HOME'] = HOME   # here, not at import: discovery imports other test modules that set their own
     APP = QApplication.instance() or QApplication([])
     APP.setQuitOnLastWindowClosed(False)   # the Close tests close windows; the module's loop goes on
 
@@ -43,6 +44,13 @@ def until(pred, ms):   # spin the event loop until pred() holds
     end = time.time() + ms / 1000
     while not pred() and time.time() < end: QTest.qWait(20)
     return pred()
+
+
+def window(test):   # a Window whose start-up one-shots (doctor, devices, profiles) have answered: one destroyed mid-call is noise
+    w = app.Window(); test.addCleanup(w.deleteLater)
+    settled = lambda: until(lambda: all(p.state() == QProcess.NotRunning for p in w.findChildren(QProcess)), 30000)
+    settled(); test.addCleanup(settled)   # and again before it goes (a failed download re-runs doctor)
+    return w
 
 
 def reap(pid):   # a test's leftover process (the detached one)
@@ -70,7 +78,7 @@ class Errors(unittest.TestCase):
         keep = runner.PORTER; self.addCleanup(setattr, runner, 'PORTER', keep)
 
     def test_failed_port_shows_cause_and_log(self):
-        w = app.Window(); self.addCleanup(w.deleteLater)
+        w = window(self)
         port = w.port; game = tempfile.mkdtemp()
         port.run(['port', game, '--progress', 'json'])
         got = wait(port.porter.finished, 60000)
@@ -156,7 +164,7 @@ class Stop(Fake):
         self.assertEqual(fin.count(), 1)
 
     def test_port_tab_status(self):
-        w = app.Window(); self.addCleanup(w.deleteLater)
+        w = window(self)
         port = w.port; fin = QSignalSpy(port.porter.finished); evs = []
         port.porter.event.connect(evs.append)
         port.run(['port', 'x', '--progress', 'json'])
@@ -174,7 +182,7 @@ class Stop(Fake):
 
 class Close(Fake):
     def window(self):
-        w = app.Window(); w.show(); self.addCleanup(w.deleteLater)
+        w = window(self); w.show()
         for porter in (w.port.porter, w.setup.fetch): self.addCleanup(self.finish, porter)
         return w
 
