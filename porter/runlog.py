@@ -4,7 +4,7 @@
 # A one-shot --json command that crashes answers {"error": "<Type>: <message>"} on stdout instead of a bare traceback.
 import json, platform, re, sys, threading, time, traceback
 
-from porter import paths
+from porter import paths, procs
 
 LONG = ('port', 'install')   # and tools --download
 RED = re.compile(r'(?:\[\d\d:\d\d:\d\d\] )?\[RED\] (.*)', re.S)   # upstream's say() puts the clock first
@@ -29,6 +29,10 @@ def _close(last):   # the last lines, then the log is closed (a second call does
         f, S['f'] = S['f'], None
         if not f: return
         f.write(f'{last}\n[{time.strftime("%H:%M:%S")}] ended after {int(time.time() - S["t0"])} s\n'); f.close()
+
+
+def cut_off():   # a stop: the stage the run was in, then the log is closed (procs' Windows watcher calls it just before it ends the job)
+    _close(f'[RED] cancelled during {S["stage"] or "the start"}')
 
 
 def _event(a, obj):
@@ -77,12 +81,14 @@ def _wrap(prog, nsp):
 
 def run(a, fn):
     """Run one command; a long one inside its log"""
+    note = procs.setup(a, cut_off)
     if not (a.cmd in LONG or (a.cmd == 'tools' and getattr(a, 'download', False))):
         if not getattr(a, 'json', False): return fn(a)
         try: return fn(a)
         except Exception as e:   # a missing lz4 used to look like a network failure to the GUI
             traceback.print_exc(); print(json.dumps({'error': f'{type(e).__name__}: {e}'}, ensure_ascii=False), flush=True); return 1
     reset(); p = _open(a)
+    if note: _w(note)
     _event(a, {'ev': 'log', 'path': str(p)})   # first, so a run that dies at once still names its log
     unwrap = lambda: None
     try:
@@ -99,6 +105,6 @@ def run(a, fn):
     if code == 1:
         _event(a, {'ev': 'error', 'msg': S['red'] or 'failed', 'type': 'BuildError', 'log': str(p)})
         _close('failed')
-    elif code == 130: _close(f'[RED] cancelled during {S["stage"] or "the start"}')
+    elif code == 130: cut_off()
     else: _close('done' if code == 0 else f'exit code {code}')
     return code
