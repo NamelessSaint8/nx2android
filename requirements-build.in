@@ -1,0 +1,7 @@
+# The bundle build tools (packaging/build_bundle.py), declared apart from the runtime. requirements-build.txt is generated
+# from this file, constrained by requirements.txt so shared packages stay on the runtime pins: edit this file, then
+# regenerate requirements-build.txt; never edit the .txt by hand.
+#   uv pip compile requirements-build.in --universal --python-version 3.11 --generate-hashes -c requirements.txt -o requirements-build.txt
+# Install with python -m pip install -r requirements.txt -r requirements-build.txt
+pyinstaller==6.22.*
+pyinstaller-hooks-contrib==2026.9
