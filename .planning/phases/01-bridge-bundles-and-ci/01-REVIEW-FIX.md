@@ -31,7 +31,7 @@ status: all_fixed
 **Applied fix:** When there is no Job Object, `_watch` now runs `taskkill /T /F /PID <own pid>` before `os._exit(130)`. The GUI comment at `_force` now describes the path that can still be reached: a porter that did not end its own tree. New test `Stop.test_windows_stop_without_job_kills_tree` mocks `os.name='nt'`, `os.read`, `subprocess.run` and `os._exit`, and checks the taskkill command.
 **Status:** fixed: requires human verification (logic change on Windows, not run on a Windows host)
 
-### WR-02: Child processes inherit the stop channel (porter's stdin)
+### WR-02: Child processes inherit the stop channel (porter's stdin), and `adb shell` can swallow "stop"
 
 **Files modified:** `porter/procs.py`, `tests/test_runlog.py`
 **Commit:** bf29f1f
@@ -58,7 +58,7 @@ New tests: `Engine.test_replaces_copy_without_nxnative` (all OSes), `Engine.test
 **Commit:** 5d7ec90
 **Applied fix:** Added `continue-on-error: true` to the `upstream-diff` job. `needs: [build, macos, upstream-diff]` and the four-asset check are unchanged. `Release.test_write_scope` now also checks the `continue-on-error` flag. actionlint is not installed here; the YAML parses and `tests/test_workflows.py` passes.
 
-### WR-05: The GUI's `devices` limit (15 s) is shorter than porter's own adb timeouts
+### WR-05: The GUI's `devices` limit (15 s) is shorter than porter's own adb timeouts (30 s)
 
 **Files modified:** `porter/procs.py`, `gui/runner.py`, `tests/test_bridge.py`, `docs/ARCHITECTURE.md`
 **Commit:** 4b38014
