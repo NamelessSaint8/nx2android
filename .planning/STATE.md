@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-10-29T08:38:15.808Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-10-29T08:43:06.582Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 08e52efcbd32c9eb7cf4ce1d1e45e5db71249cb0
+state_head: 6b190f920b969774c409674a406d81bcd6589134
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 01 execution started
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P01 | resumed | 3 tasks | 8 files |
+| Phase 01 P05 | 3 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Roadmap]: GUI features are vertical slices (porter JSON command + view per phase); the new shell starts in Phase 3 beside `gui/app.py` and becomes the default in Phase 6
 - [Roadmap]: DEV-06 (launch on device) and DEV-07 (logcat) stay in v1 per REQUIREMENTS.md, although research listed them as v1.x
 - [Phase 01]: Runtime, build and dev deps each get their own .in and hashed uv lock; build/dev locks constrained by requirements.txt
+- [Phase 01]: 01-05: frozen porter builds from <user dir>/engine/<ENGINE id>/nxnative; a missing or non-alphanumeric ENGINE id falls back to the bundle's own nxnative
+- [Phase 01]: 01-05: other engine versions are pruned only by the start that installs a copy
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T08:38:15.794Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-10-29T08:43:06.566Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
