@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import os
 import unittest
 
 
@@ -10,6 +11,7 @@ SOURCE = Path(__file__).resolve().parents[1] / 'nxnative/dm/android/perf_android
 
 
 class AdaptiveFrameRate(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'the harness is POSIX-only (setenv, unsetenv)')
     def test_downshift_veto_allows_median_recovery(self):
         cc = shutil.which('cc') or shutil.which('clang')
         if not cc:
