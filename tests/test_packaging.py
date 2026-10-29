@@ -1,6 +1,6 @@
 # packaging/build_bundle.py and packaging/glibc_floor.py: the asset names of the four bundles (D-10), the host-to-target mapping, which nxnative files
 # a bundle carries, the engine id porter/paths.py keys its copy by, and the glibc floor of a Linux bundle. Stdlib only: nothing here runs PyInstaller.
-import sys, tempfile, unittest
+import contextlib, io, sys, tempfile, unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'packaging'))
@@ -49,8 +49,10 @@ class Glibc(unittest.TestCase):
         need = glibc_floor.need(OBJDUMP)
         self.assertEqual(max(need, default=None), (2, 34))
         self.assertEqual(need.get((2, 34)), {'libQt6Gui.so.6'})
-        self.assertEqual(glibc_floor.main(['glibc_floor.py', 'dist/nx2android', '2.34'], OBJDUMP), 0)
-        self.assertEqual(glibc_floor.main(['glibc_floor.py', 'dist/nx2android', '2.33'], OBJDUMP), 1)
+        with contextlib.redirect_stdout(io.StringIO()) as out:   # its "[RED] above" line would read as a real failure in a CI log
+            self.assertEqual(glibc_floor.main(['glibc_floor.py', 'dist/nx2android', '2.34'], OBJDUMP), 0)
+            self.assertEqual(glibc_floor.main(['glibc_floor.py', 'dist/nx2android', '2.33'], OBJDUMP), 1)
+        self.assertIn('glibc floor 2.34: libQt6Gui.so.6', out.getvalue())
 
 
 if __name__ == '__main__':
