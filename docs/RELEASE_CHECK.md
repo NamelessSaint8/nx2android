@@ -2,6 +2,8 @@
 
 Which games the player's bundle has been checked to port, from the game files to an APK and a data pack, on a Windows PC with nothing from the developer's machine: the bundle unzipped into an empty folder, its own player folder, the tools from its **Download missing tools**, and a game folder holding only the game's NSP files. Which games play is in [PORT_STATUS.md](PORT_STATUS.md).
 
+The fork ships four bundles: Windows x64 (zip), macOS arm64 (DMG, signed and notarized), Linux x64 and Linux arm64 (tar.gz). Each comes from a `fork-release.yml` run (its artifacts for a dispatch run, the draft release for a `v*-ns.*` tag) or from `python packaging/build_bundle.py` on that host. The game ports below are checked on Windows; every host also gets the [host checks](#host-checks).
+
 A release ships when every row of the results below has been ported by the bundle it ships.
 
 ## When to run the check again
@@ -15,7 +17,7 @@ A release ships when every row of the results below has been ported by the bundl
 
 ## How
 
-1. Build the bundle (`python packaging/build_bundle.py`) and unzip it into an empty folder, say `C:\nx2a-test\nx2android`.
+1. Take the bundle from a `fork-release.yml` run, or build it (`python packaging/build_bundle.py`), and unzip it into an empty folder, say `C:\nx2a-test\nx2android`. On macOS open the DMG and port from the mounted app; on Linux unpack the tarball (`tar xzf`); the steps below are the same with `nx2android` for `nx2android.exe` and `export` for `set`.
 2. Once per test folder, with a player folder of its own: `set NX2A_HOME=C:\nx2a-test\home`, then `nx2android.exe -m porter tools --download` and `nx2android.exe -m porter config keys <prod.keys>`.
 3. Give each game a folder of hard links to its NSP files (`mklink /H <new> <nsp>`, or `ln` in Git Bash): a port from scratch without copying the game.
 4. `python devtools/port_check.py C:\nx2a-test\nx2android <game folder> … --fresh --write` ports each one and puts its row below, replacing that game's earlier row.
@@ -41,3 +43,18 @@ The v0.1.2 release (2026-10-28): by the maintainer's choice no bundle was run th
 | Viractal | `0100FD501F95A000` | 1.4.5 | ported | APK 2 MB, data 2.3 GB | 5 min (from scratch) | 7d2b374 | 2026-10-27 |
 | Xenoblade Chronicles 3 | `010074F013262000` | 2.2.0 | ported | APK 2 MB, data 19.2 GB, 4 DLC | 4 min (from scratch) | 7d2b374 | 2026-10-27 |
 <!-- /port_check rows -->
+
+## Host checks
+
+What a bundle must do on each host besides porting. CI fills the glibc floor rows (the `glibc floor` lines in a `fork-release.yml` run's summary); the others are run by hand on a machine of that host, from the bundle a run produced. A row left at "not run" is still to do.
+
+| Host | Check | Result | Bundle | Date |
+|------|-------|--------|--------|------|
+| Windows x64 | Unzip on a PC without Python and start `nx2android.exe` (PKG-01) | not run | | |
+| macOS 14+ arm64 | The DMG downloaded in a browser opens from Finder, the app dragged to Applications starts with no Gatekeeper warning, and `spctl -a -t open --context context:primary-signature -v` accepts the DMG (PKG-02) | not run | | |
+| Linux x64 | Starts under X11 (`QT_QPA_PLATFORM=xcb`) and Wayland (`QT_QPA_PLATFORM=wayland`) with no Fontconfig errors (PKG-03) | not run | | |
+| Linux arm64 | Starts under X11 (`QT_QPA_PLATFORM=xcb`) and Wayland (`QT_QPA_PLATFORM=wayland`) with no Fontconfig errors (PKG-04) | not run | | |
+| macOS 14+ arm64 | Full port of a playable title from the mounted DMG, then `codesign --verify --deep --strict` on the app still passes (PKG-05) | not run | | |
+| Each host | Cancel mid-port leaves no dotnet, MSBuild, clang or shader tool process, and `adb devices` still answers (BRDG-01) | not run | | |
+| Linux x64 | glibc floor of the bundle, gate 2.35 (CI-04) | 2.35 (libpython3.14, libgcc_s, libcairo, libtcl, libtk) | 9e947b8 | 2026-10-29 |
+| Linux arm64 | glibc floor of the bundle, gate 2.39 (CI-04) | 2.38 (the PySide6 Qt libraries, libicu) | 9e947b8 | 2026-10-29 |
