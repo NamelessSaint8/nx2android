@@ -1,6 +1,6 @@
 # Where things are: the repository (and the nxnative subtree in it), the player's own folder (settings, the APK signing key).
 # When frozen the bundle's resource root is read-only (a signed .app, a DMG, Program Files): the port builds from a copy of its engine in the player's folder.
-import os, shutil, stat, sys
+import os, shutil, stat, sys, time
 from pathlib import Path
 
 FROZEN = getattr(sys, 'frozen', False)
@@ -21,6 +21,13 @@ def user_dir():
     return d
 
 
+def _writable(root):   # copystat carries a DMG's or a chmod a-w bundle's read-only modes: dotnet could not create obj/ there
+    for r, dirs, files in os.walk(root):
+        for n in dirs + files:
+            p = os.path.join(r, n)
+            if not os.path.islink(p): os.chmod(p, os.stat(p).st_mode | stat.S_IWUSR)
+
+
 def _engine():
     """The engine a frozen port builds from: <user dir>/engine/<ENGINE id>/nxnative, a writable copy of the bundle's nxnative/ made on first use
     (dotnet build writes obj/ into the engine's projects, and nothing may be written into the bundle)"""
@@ -30,15 +37,20 @@ def _engine():
     base = user_dir() / 'engine'; dst = base / eid
     if (dst / 'nxnative').is_dir(): return dst / 'nxnative'
     tmp = base / f'{eid}.tmp-{os.getpid()}'   # copy aside, then one rename: a racing porter (the GUI starts three at once) never sees half a copy
-    shutil.copytree(REPO / 'nxnative', tmp / 'nxnative', symlinks=True)
-    for root, dirs, files in os.walk(tmp):   # copystat carries a DMG's or a chmod a-w bundle's read-only modes: dotnet could not create obj/ there
-        for n in dirs + files:
-            p = os.path.join(root, n)
-            if not os.path.islink(p): os.chmod(p, os.stat(p).st_mode | stat.S_IWUSR)
-    try: os.rename(tmp, dst)
-    except OSError:
-        if not (dst / 'nxnative').is_dir(): raise
-        shutil.rmtree(tmp, ignore_errors=True)   # another porter got there first
+    try:
+        shutil.copytree(REPO / 'nxnative', tmp / 'nxnative', symlinks=True); _writable(tmp)
+        for n in range(5):   # WR-03: on Windows the rename fails for a moment while an antivirus scans the ~1,450 files just written
+            try: os.rename(tmp, dst); break
+            except OSError:
+                if (dst / 'nxnative').is_dir(): shutil.rmtree(tmp, ignore_errors=True); break   # another porter got there first
+                if n == 4: raise
+                # WR-03: a dst without nxnative (part-deleted, quarantined) blocks every rename into it: move it aside, the prune below removes it
+                try: os.rename(dst, base / f'{eid}.old-{os.getpid()}')
+                except OSError: pass
+                time.sleep(0.5)
+    except OSError as e:   # WR-03: this runs at import, in the GUI too: no 150 MB temp folder left behind, and a message that says what to do
+        _writable(tmp); shutil.rmtree(tmp, ignore_errors=True)   # a part copy has the bundle's read-only folders: rmtree alone leaves it
+        raise OSError(f'[RED] could not copy the engine to {dst}: {e}. Free some disk space or let your antivirus allow that folder, then start nx2android again') from e
     # the copies of other bundle versions go once this one is in place; a same-id temp folder may be another porter still copying
     # shortcut: a same-id temp folder left by a copy that was killed stays until the next version, upgrade if disk use is reported
     for p in base.iterdir():

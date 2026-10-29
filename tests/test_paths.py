@@ -89,6 +89,23 @@ class Engine(unittest.TestCase):
         self.start(exe, mac=True)
         self.assertEqual(sorted(p.name for p in (self.home / 'engine').iterdir()), ['abc123', 'abc123.tmp-1'])   # another porter may still be copying
 
+    def test_replaces_copy_without_nxnative(self):   # WR-03: a part-deleted copy no longer blocks every start
+        exe, _ = self.bundle(mac=True)
+        (self.home / 'engine/abc123').mkdir(parents=True); (self.home / 'engine/abc123/stray.txt').write_text('x')
+        r = self.start(exe, mac=True)
+        self.assertEqual(Path(r['NXNATIVE']), self.home / 'engine/abc123/nxnative')
+        self.assertTrue((self.home / 'engine/abc123/nxnative/dm/games/x.tsv').is_file())
+        self.assertEqual([p.name for p in (self.home / 'engine').iterdir()], ['abc123'])
+
+    @unittest.skipIf(os.name == 'nt' or os.geteuid() == 0, 'needs a file the copy cannot read (POSIX, not root)')
+    def test_failed_copy_says_why_and_cleans_up(self):   # WR-03
+        exe, res = self.bundle(mac=True)
+        os.chmod(res / 'nxnative/scripts', 0o755); os.chmod(res / 'nxnative/scripts/a.py', 0)
+        p = self.start(exe, mac=True, wait=False); _, err = p.communicate(timeout=120)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('[RED] could not copy the engine to', err)
+        self.assertEqual(list((self.home / 'engine').iterdir()), [])
+
     def test_concurrent_first_start(self):   # the GUI's three start-up calls
         exe, _ = self.bundle(mac=True)
         ps = [self.start(exe, mac=True, wait=False) for _ in range(3)]

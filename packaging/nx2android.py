@@ -24,7 +24,10 @@ def main():
             import ctypes
             k = ctypes.windll.kernel32; ids = (ctypes.c_uint * 4)()
             if k.GetConsoleProcessList(ids, 4) == 1: ctypes.windll.user32.ShowWindow(k.GetConsoleWindow(), 0)
-        from gui.app import main as gui
+        try: from gui.app import main as gui
+        except OSError as e:   # WR-03: porter.paths copies the engine at import; with the console hidden a window is all the player sees
+            from gui import fatal
+            fatal(str(e)); sys.exit(1)
         sys.exit(gui(sys.argv))
 
 

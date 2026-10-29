@@ -386,6 +386,11 @@ class Timeout(Fake):   # a one-shot that never answers is killed at its own limi
         self.assertEqual(got, [])
         self.assertTrue(gone(pids['child']))
 
+    def test_fatal_shows_start_failure(self):   # WR-03: the bundle's launcher shows a failed engine copy in a window
+        import gui
+        with mock.patch.object(QMessageBox, 'critical') as box: gui.fatal('[RED] could not copy the engine')
+        self.assertEqual(box.call_args[0][1:], ('nx2android', 'could not copy the engine'))
+
     def test_default_limits(self):
         self.assertEqual(runner.TIMEOUTS, {'devices': 15, 'doctor': 30, 'inspect': 60, 'profiles': 20, 'tools': 60})
 
