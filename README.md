@@ -19,7 +19,7 @@ The step-by-step guide is [packaging/INSTALL.md](packaging/INSTALL.md). You need
 
 ## Setup from the repository
 
-Install [Python](https://www.python.org) 3.11 or later and `python -m pip install -r requirements.txt` (a hashed lock generated from `requirements.in`, so pip checks every hash), then `python -m porter tools --download` (or install them yourself):
+Install [Python](https://www.python.org) 3.11 or later for the CLI, 3.12 or later for the GUI, and `python -m pip install -r requirements.txt` (a hashed lock generated from `requirements.in`, so pip checks every hash), then `python -m porter tools --download` (or install them yourself):
 - [Android NDK r27c](https://developer.android.com/ndk/downloads) (only the NDK: no Android Studio, SDK or JDK)
 - [.NET SDK 10](https://dotnet.microsoft.com/download)
 - Android [platform-tools](https://developer.android.com/tools/releases/platform-tools) (adb), to install from the tool

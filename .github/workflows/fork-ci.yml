@@ -28,7 +28,7 @@ jobs:
           - { os: macos-15, python: '3.14' }
           - { os: ubuntu-22.04, python: '3.14' }
           - { os: ubuntu-24.04-arm, python: '3.14' }
-          - { os: ubuntu-22.04, python: '3.11' }   # the floor; setup-python's newest 3.11 carries the CVE-2025-4517 tarfile fix
+          - { os: ubuntu-22.04, python: '3.11' }   # the CLI floor (the GUI tests skip there); setup-python's newest 3.11 carries the CVE-2025-4517 tarfile fix
     env:
       QT_QPA_PLATFORM: offscreen
     defaults:

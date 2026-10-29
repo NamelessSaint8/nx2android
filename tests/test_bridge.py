@@ -10,15 +10,17 @@ REPO = Path(__file__).resolve().parent.parent
 FAKE = str(REPO / 'tests/fixtures/bridge/fake_porter.py')
 sys.path.insert(0, str(REPO))
 
+# a declared floor, not a missing module, so it skips in CI too: PySide6 6.12's refcount bug on True aborts 3.11
+OLD = sys.version_info < (3, 12)
 MISSING = None
-for _m in ('PySide6.QtWidgets', 'lz4.block', 'capstone'):
+for _m in () if OLD else ('PySide6.QtWidgets', 'lz4.block', 'capstone'):
     try: __import__(_m)
     except ModuleNotFoundError:
         if os.environ.get('CI'): raise   # CI installs the lock: a missing module there is a failure
         MISSING = MISSING or _m.split('.')[0]
 
 HOME = tempfile.mkdtemp()
-if not MISSING:
+if not (OLD or MISSING):
     from PySide6.QtTest import QSignalSpy, QTest
     from PySide6.QtCore import QProcess
     from PySide6.QtWidgets import QApplication, QMessageBox
@@ -29,6 +31,7 @@ APP = None
 
 def setUpModule():
     global APP
+    if OLD: raise unittest.SkipTest('the GUI needs Python 3.12+ (PySide6 6.12 refcount bug on 3.11)')
     if MISSING: raise unittest.SkipTest(f'{MISSING} is not installed (python -m pip install -r requirements.txt)')
     os.environ['NX2A_HOME'] = HOME   # here, not at import: discovery imports other test modules that set their own
     APP = QApplication.instance() or QApplication([])
