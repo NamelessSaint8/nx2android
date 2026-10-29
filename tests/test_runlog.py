@@ -157,6 +157,16 @@ a = argparse.Namespace(cmd='port', progress='json', json=False, install=False)
 sys.exit(runlog.run(a, lambda a: cli._with_progress(a.progress, body)))
 '''
 
+# WR-02: a child porter starts without stdin= gets an empty stdin, not the GUI's stop channel
+INHERIT = '''
+import argparse, subprocess, sys
+from porter import procs
+procs.setup(argparse.Namespace(cmd='port', progress='json'), lambda: None)
+try: got = subprocess.run([sys.executable, '-c', 'import os; print(os.read(0, 64))'], capture_output=True, text=True, timeout=5).stdout.strip()
+except subprocess.TimeoutExpired: got = 'blocked'
+print(got, flush=True)
+'''
+
 
 def gone(pid, wait=5):   # True once the process no longer exists (an orphaned zombie is reaped by init in that time)
     t = time.time() + wait
@@ -228,6 +238,13 @@ class Stop(unittest.TestCase):
             procs._watch(None, lambda: None)
         self.assertEqual(run.call_args[0][0], ['taskkill', '/T', '/F', '/PID', str(os.getpid())])
         ex.assert_called_once_with(130)
+
+    def test_children_get_no_stop_channel(self):
+        e = dict(os.environ, NX2A_HOME=tempfile.mkdtemp(), NX2A_GUI='1', PYTHONIOENCODING='utf-8')
+        p = subprocess.Popen([sys.executable, '-c', INHERIT], cwd=REPO, env=e, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding='utf-8',
+                             start_new_session=os.name != 'nt')
+        self.addCleanup(self.kill, p)
+        self.assertEqual(p.stdout.readline().strip(), "b''")
 
     def test_msbuild_env(self):
         from porter import procs

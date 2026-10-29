@@ -19,7 +19,9 @@ def setup(a, on_stop):
         try: job = _job()
         except OSError as e: note = f'Windows job: not available ({e})'
     else: signal.signal(signal.SIGTERM, _term)
-    threading.Thread(target=_watch, args=(job, on_stop, getattr(a, 'progress', None) == 'json'), daemon=True).start()
+    # WR-02: the watcher keeps the stop channel and fd 0 becomes the null device, so no child (adb shell above all) inherits it and reads the stop
+    fd = os.dup(0); nul = os.open(os.devnull, os.O_RDONLY); os.dup2(nul, 0); os.close(nul)
+    threading.Thread(target=_watch, args=(job, on_stop, getattr(a, 'progress', None) == 'json', fd), daemon=True).start()
     return note
 
 
@@ -67,11 +69,11 @@ def _job():
     return job
 
 
-def _watch(job, on_stop, as_json=False):
-    """Wait for "stop" or EOF on stdin. os.read on the raw fd: a daemon thread blocked in sys.stdin can abort interpreter shutdown"""
+def _watch(job, on_stop, as_json=False, fd=0):
+    """Wait for "stop" or EOF on stdin (fd: setup's copy of it). os.read on the raw fd: a daemon thread blocked in sys.stdin can abort interpreter shutdown"""
     buf = b''
     while b'stop' not in buf:
-        try: chunk = os.read(0, 64)
+        try: chunk = os.read(fd, 64)
         except OSError: chunk = b''
         if not chunk: break
         buf += chunk
