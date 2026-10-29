@@ -81,7 +81,8 @@ class Errors(unittest.TestCase):
         keep = runner.PORTER; self.addCleanup(setattr, runner, 'PORTER', keep)
 
     def test_failed_port_shows_cause_and_log(self):
-        w = window(self)
+        real = runner.PORTER; runner.PORTER = [FAKE, '--']   # WR-06: the stand-in answers the start-up devices call, so no real adb server starts
+        w = window(self); runner.PORTER = real
         port = w.port; game = tempfile.mkdtemp()
         port.run(['port', game, '--progress', 'json'])
         got = wait(port.porter.finished, 60000)

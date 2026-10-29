@@ -32,6 +32,8 @@ class InProcess(unittest.TestCase):   # runlog.run on a Namespace in this proces
         keep = dict(os.environ); self.addCleanup(lambda: (os.environ.clear(), os.environ.update(keep)))
         os.environ.pop('NX2A_GUI', None)
         self.home = Path(tempfile.mkdtemp()); os.environ['NX2A_HOME'] = str(self.home)
+        from porter import procs
+        adb = mock.patch.object(procs, 'adb_server', lambda: None); adb.start(); self.addCleanup(adb.stop)   # WR-06: install never starts the machine's adb server
         self.work = Path(tempfile.mkdtemp()) / '0100000000AAA000_build'; self.work.mkdir()
 
     def run_cmd(self, fn, cmd='port', progress='off'):
