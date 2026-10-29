@@ -1,15 +1,19 @@
 # Running porter from the GUI: one QProcess per command, its stdout read as JSON. A port (`--progress json`) is a stream of events, one object per line
-# (stage, step, progress, stage_end, say, result); the other commands (`--json`) print one JSON document. Stopping ends the whole process tree:
+# (stage, step, progress, stage_end, say, result); the other commands (`--json`) print one JSON document, within TIMEOUTS. Stopping ends the whole process tree:
 # a port runs dotnet, the rewriter and the NDK's clang as children of its own. POSIX: SIGTERM to the run's session, SIGKILL after GRACE_MS;
 # Windows: a "stop" line on stdin (porter ends its own Job Object), porter killed after GRACE_MS. finished comes only once nothing of the run is left.
 import json, os, signal, subprocess, sys
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
+from shiboken6 import isValid
 
 from porter import paths
 
 PORTER = ['-m', 'porter']   # tests point this at a stand-in (tests/test_bridge.py)
 GRACE_MS = 5000   # D-05: about 5 s between the stop request and the force kill
+# D-03: each one-shot's limit in s, after which its tree is killed: devices because adb stalls on a bad cable, inspect because a large XCI's headers
+# on a slow disk take time, tools because it reads the vendors' download lists over the network
+TIMEOUTS = {'devices': 15, 'doctor': 30, 'inspect': 60, 'profiles': 20, 'tools': 60}
 
 
 def _env():
@@ -110,13 +114,40 @@ class Porter(QObject):
         self.finished.emit(code)
 
 
-def call_json(parent, args, done):
-    """A short porter command that prints one JSON document: done(obj or None, exit code)"""
-    p = _process(parent, args)
+def _kill_tree(p, pid):   # a one-shot's tree; POSIX: its own session (pid is the group's id), Windows: porter, whose Job Object takes its children
+    if os.name == 'nt':
+        if isValid(p): p.kill()
+    elif pid > 1 and _alive(pid):
+        try: os.killpg(pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError): pass
+
+
+def call_json(parent, args, done, timeout=None):
+    """A short porter command that prints one JSON document: done(obj, exit code, fail), exactly once. fail is None for an answer; otherwise obj is
+    None and fail = {'timeout': the limit in s if it hit, else 0, 'error': porter's {"error"} message or '', 'stderr': the last lines of stderr}.
+    The exit code alone is no failure: inspect exits 2 for a game it cannot port. Nothing is called once the owner (parent) is gone"""
+    p = _process(parent, args); limit = timeout or TIMEOUTS.get(args[0] if args else '', 60)
+    st = {'pid': 0, 'timeout': 0, 'err': b'', 'ended': False}
+    timer = QTimer(p); timer.setSingleShot(True)
+    def hit(): st['timeout'] = limit; _kill_tree(p, st['pid'])
+    def end(obj, code, fail):
+        if st['ended']: return
+        st['ended'] = True
+        if not isValid(p): _kill_tree(p, st['pid']); return   # the owner was destroyed mid-call (the app quit): its children go too, its views are gone
+        timer.stop(); done(obj, code, fail); p.deleteLater()
+    def err():
+        if isValid(p): st['err'] += bytes(p.readAllStandardError())
     def fin(code, _status):
-        out = bytes(p.readAllStandardOutput()).decode('utf-8', 'replace')
+        if not isValid(p): end(None, code, None); return
+        out = bytes(p.readAllStandardOutput()).decode('utf-8', 'replace'); err()
         try: obj = json.loads(out)
         except ValueError: obj = None
-        done(obj, code); p.deleteLater()
-    p.finished.connect(fin); p.start()
+        if obj is not None and not st['timeout'] and not (isinstance(obj, dict) and 'error' in obj): end(obj, code, None); return
+        tail = '\n'.join(st['err'].decode('utf-8', 'replace').strip().splitlines()[-8:])
+        end(None, code, {'timeout': st['timeout'], 'error': str(obj['error']) if isinstance(obj, dict) and obj.get('error') else '', 'stderr': tail})
+    def started(): st['pid'] = p.processId(); timer.start(int(limit * 1000))
+    def failed(e):   # FailedToStart brings no finished signal
+        if e == QProcess.FailedToStart: end(None, -1, {'timeout': 0, 'error': p.errorString() if isValid(p) else '', 'stderr': ''})
+    timer.timeout.connect(hit); p.started.connect(started); p.readyReadStandardError.connect(err); p.errorOccurred.connect(failed); p.finished.connect(fin)
+    p.start()
     return p

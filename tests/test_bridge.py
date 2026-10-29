@@ -260,4 +260,52 @@ class Close(Fake):
         self.assertEqual(Path(ds.openUrl.call_args[0][0].toLocalFile()), Path(HOME) / 'logs/replay-tools.log')
 
 
+class Timeout(Fake):   # a one-shot that never answers is killed at its own limit, with its children, and the view offers Retry
+    def hung(self, args, done, timeout=1, parent=None):   # a one-shot that holds a --tree; its pids once the stand-in wrote them
+        pf = Path(tempfile.mkdtemp()) / 'pids.json'
+        runner.PORTER = [FAKE, '--hang', '--pid-file', str(pf), '--']
+        runner.call_json(parent, args, done, timeout=timeout)
+        self.assertTrue(until(pf.is_file, 10000))
+        until(lambda: pf.read_text(), 2000); pids = json.loads(pf.read_text())
+        self.addCleanup(reap, pids['detached']); self.addCleanup(reap, pids['child'])
+        return pids
+
+    def test_kills_tree_at_limit(self):
+        got = []
+        pids = self.hung(['inspect', 'x', '--json'], lambda *a: got.append(a))
+        self.assertTrue(until(lambda: got, 4000))
+        self.assertEqual(len(got), 1)
+        obj, _code, fail = got[0]
+        self.assertIsNone(obj)
+        self.assertEqual(fail['timeout'], 1)
+        self.assertTrue(gone(pids['child']))
+
+    def test_inspect_card_retry(self):
+        runner.PORTER = [FAKE, '--']   # the Window's own one-shots
+        w = window(self); port = w.port
+        port.on_inspect(None, -1, {'timeout': 60, 'error': '', 'stderr': ''})
+        self.assertIn("didn't answer in 60 s", port.card.text())
+        self.assertIn('href="retry"', port.card.text())
+        self.assertNotIn('No game found', port.card.text())
+        port.folder.setText(tempfile.mkdtemp())
+        with mock.patch.object(app, 'call_json') as call:
+            port.card.linkActivated.emit('retry')
+        self.assertEqual(call.call_count, 1)
+        self.assertNotIn('href="retry"', port.card.text())
+
+    def test_owner_gone_mid_call(self):   # the app quits while a one-shot runs: no callback into destroyed views, no RuntimeError, no leftover child
+        import shiboken6
+        from PySide6.QtWidgets import QWidget
+        owner = QWidget(); got = []
+        pids = self.hung(['doctor', '--json'], lambda *a: got.append(a), timeout=30, parent=owner)
+        with mock.patch.object(sys, 'excepthook') as hook:
+            shiboken6.delete(owner); QTest.qWait(300)
+        hook.assert_not_called()
+        self.assertEqual(got, [])
+        self.assertTrue(gone(pids['child']))
+
+    def test_default_limits(self):
+        self.assertEqual(runner.TIMEOUTS, {'devices': 15, 'doctor': 30, 'inspect': 60, 'profiles': 20, 'tools': 60})
+
+
 if __name__ == '__main__': unittest.main()

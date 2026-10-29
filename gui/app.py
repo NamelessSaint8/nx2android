@@ -3,7 +3,7 @@
 #   Setup  the tools a port needs (porter doctor), downloading the missing ones (porter tools --download), and the saved settings (porter.config): prod.keys, the NDK,
 #          dotnet, adb, the output folder, the device
 #   Games  the game profiles (porter profiles --all)
-import os, subprocess, sys, time
+import html, os, subprocess, sys, time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QUrl
@@ -30,6 +30,17 @@ def size(b):
     return f'{b} B'
 
 
+def cause(fail):   # a failed one-shot porter call (gui/runner.call_json) in one line
+    if fail.get('timeout'): return f"porter didn't answer in {fail['timeout']} s"
+    return fail.get('error') or (fail.get('stderr') or '').strip().rpartition('\n')[2] or 'porter gave no answer'
+
+
+def failed(fail):   # the same as red rich text: the cause, the last lines of stderr, and a Retry link (href "retry"); porter's text is escaped
+    head = cause(fail) if fail.get('timeout') or fail.get('error') or not fail.get('stderr') else 'porter failed'
+    tail = html.escape(fail.get('stderr') or '', quote=False).replace('\n', '<br>')
+    return f'<span style="color:#c62828">{html.escape(head, quote=False)}' + (f'<br>{tail}' if tail else '') + '</span> &nbsp;<a href="retry">Retry</a>'
+
+
 def path_row(edit, pick):   # a line edit with a Browse button
     w = QWidget(); h = QHBoxLayout(w); h.setContentsMargins(0, 0, 0, 0)
     b = QPushButton('Browse…'); b.clicked.connect(pick)
@@ -50,6 +61,7 @@ class PortTab(QWidget):
         g = QGroupBox('Game'); gl = QVBoxLayout(g)
         gl.addWidget(path_row(self.folder, self.pick_folder))
         self.card = QLabel('Choose a game folder.'); self.card.setWordWrap(True); self.card.setTextFormat(Qt.RichText); self.card.setMinimumHeight(60)
+        self.card.linkActivated.connect(lambda _link: self.inspect())   # Retry: inspect() replaces the card first, so one click is one call
         gl.addWidget(self.card)
         v.addWidget(g)
 
@@ -110,10 +122,9 @@ class PortTab(QWidget):
         self.card.setText('Reading the game folder…')
         call_json(self, ['inspect', d, '--json'], self.on_inspect)
 
-    def on_inspect(self, info, code):
-        err = info
-        self.info = info = None if info and info.get('error') else info
-        if not info: self.card.setText('<span style="color:#c62828">' + ((err or {}).get('error') or 'No game found in this folder (an NSP or XCI with a title ID).') + '</span>'); return
+    def on_inspect(self, info, code, fail):
+        self.info = info
+        if fail: self.card.setText(failed(fail)); return   # porter's own error names the cause (no NSP or XCI, a bad file); a crash or a hang shows stderr
         a = info.get('android') or {}
         st = a.get('status', 'ios only' if info.get('profile') else 'not supported')
         col = STATUS_COLOUR.get(st, '#c62828')
@@ -133,7 +144,7 @@ class PortTab(QWidget):
 
     def refresh_devices(self):
         cur = self.device.currentData() or config.load().get('device')
-        def got(rows, code):
+        def got(rows, code, fail=None):
             self.device.clear()
             for r in rows or []:
                 if r['state'] == 'device': self.device.addItem(f'{r["serial"]}  {r["info"]}', r['serial'])
@@ -279,7 +290,7 @@ class SetupTab(QWidget):
         self.dl_btn.setEnabled(False); self.dl_step.setText('reading the download lists…')
         call_json(self, ['tools', '--json'], self.confirm_download)
 
-    def confirm_download(self, items, code):
+    def confirm_download(self, items, code, fail=None):
         self.dl_btn.setEnabled(True); self.dl_step.setText('')
         if items is None: QMessageBox.warning(self, 'Download', 'Could not read the download lists from Google and Microsoft. Check the internet connection and try again.'); return
         if not items: QMessageBox.information(self, 'Download', 'Nothing to download: every tool is there.'); return
@@ -333,7 +344,7 @@ class SetupTab(QWidget):
         config.save(c); self.check()
 
     def check(self):
-        def got(rows, code):
+        def got(rows, code, fail=None):
             self.table.setRowCount(0)
             for r in rows or []:
                 i = self.table.rowCount(); self.table.insertRow(i)
@@ -359,7 +370,7 @@ class GamesTab(QWidget):
         v.addWidget(lab); v.addWidget(self.table)
         call_json(self, ['profiles', '--json'], self.got)
 
-    def got(self, rows, code):
+    def got(self, rows, code, fail=None):
         rows = sorted(rows or [], key=lambda r: r['name'].lower())
         self.table.setSortingEnabled(False); self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
