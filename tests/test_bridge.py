@@ -31,6 +31,7 @@ def setUpModule():
     global APP
     if MISSING: raise unittest.SkipTest(f'{MISSING} is not installed (python -m pip install -r requirements.txt)')
     APP = QApplication.instance() or QApplication([])
+    APP.setQuitOnLastWindowClosed(False)   # the Close tests close windows; the module's loop goes on
 
 
 def wait(signal, ms):   # the first emission's arguments, or None
@@ -168,6 +169,87 @@ class Stop(Fake):
         self.assertTrue(fin.wait(10000))
         self.assertEqual(port.step.text(), 'cancelled')
         self.assertEqual(port.log.toPlainText().splitlines()[-1], 'cancelled')
+
+
+
+class Close(Fake):
+    def window(self):
+        w = app.Window(); w.show(); self.addCleanup(w.deleteLater)
+        for porter in (w.port.porter, w.setup.fetch): self.addCleanup(self.finish, porter)
+        return w
+
+    def finish(self, porter):   # a run a test left going
+        if porter.running():
+            fin = QSignalSpy(porter.finished); porter.stop(); fin.wait(10000)
+
+    def ask(self, w, answer):
+        m = mock.patch.object(w, 'ask_stop', create=True, return_value=answer); self.addCleanup(m.stop); return m.start()
+
+    def running_port(self, w, args):
+        evs = []; w.port.porter.event.connect(evs.append)
+        w.port.run(args)
+        self.assertTrue(until(lambda: any(e.get('ev') == 'pids' for e in evs), 10000))
+        pids = next(e for e in evs if e.get('ev') == 'pids'); self.addCleanup(reap, pids['detached'])
+        return pids
+
+    def test_idle_close_quits(self):
+        w = self.window(); ask = self.ask(w, True)
+        self.assertTrue(w.close())
+        ask.assert_not_called()
+
+    def test_keep_running(self):
+        w = self.window(); self.ask(w, False)
+        self.running_port(w, ['port', 'x', '--progress', 'json'])
+        self.assertFalse(w.close())
+        self.assertTrue(w.port.porter.running())
+        self.assertTrue(w.isVisible())
+
+    def test_stop_and_quit(self):
+        w = self.window(); self.ask(w, True)
+        pids = self.running_port(w, ['port', 'x', '--progress', 'json'])
+        fin = QSignalSpy(w.port.porter.finished)
+        self.assertFalse(w.close())
+        self.assertEqual(w.port.step.text(), 'stopping…')
+        self.assertTrue(w.isVisible())
+        self.assertTrue(fin.wait(10000))
+        self.assertTrue(until(lambda: not w.isVisible(), 3000))
+        self.assertTrue(gone(pids['child']))
+
+    def test_install_wording(self):
+        for args, installing in ((['install', 'd', '--apk', 'a.apk', '--progress', 'json'], True), (['port', 'x', '--progress', 'json', '--install'], True),
+                                 (['port', 'x', '--progress', 'json'], False)):
+            with self.subTest(args=args):
+                w = self.window(); ask = self.ask(w, False)
+                self.running_port(w, args)
+                self.assertFalse(w.close())
+                ask.assert_called_once_with(installing)
+                self.finish(w.port.porter)
+
+    def test_download_counts(self):
+        w = self.window(); ask = self.ask(w, False)
+        w.setup.fetch.start(['tools', '--download', '--progress', 'json'])
+        self.assertTrue(until(lambda: w.setup.fetch.pgid, 10000))
+        self.assertFalse(w.close())
+        ask.assert_called_once_with(False)
+
+    def test_download_failure_inline(self):
+        runner.PORTER = [FAKE, '--']   # the Window's own one-shots
+        w = self.window()
+        runner.PORTER = ['-c', "import json, os, sys; d = os.path.join(os.environ['NX2A_HOME'], 'logs'); os.makedirs(d, exist_ok=True); "
+                               "p = os.path.join(d, 'replay-tools.log'); open(p, 'w').close(); print(json.dumps({'ev': 'log', 'path': p})); "
+                               "print(json.dumps({'ev': 'error', 'msg': 'bad <thing> & co', 'type': 'FetchError', 'log': p})); sys.exit(1)"]
+        fin = QSignalSpy(w.setup.fetch.finished)
+        with mock.patch.object(QMessageBox, 'warning', side_effect=AssertionError('a dialog')) as warn:
+            w.setup.fetch.start(['tools', '--download', '--progress', 'json'])
+            self.assertTrue(fin.wait(10000))
+            QTest.qWait(50)
+        warn.assert_not_called()
+        text = w.setup.dl_step.text()
+        self.assertIn('bad &lt;thing> &amp; co', text)
+        self.assertIn('<a href="log">Open log</a>', text)
+        with mock.patch.object(app, 'QDesktopServices') as ds:
+            w.setup.dl_step.linkActivated.emit('log')
+        self.assertEqual(Path(ds.openUrl.call_args[0][0].toLocalFile()), Path(HOME) / 'logs/replay-tools.log')
 
 
 if __name__ == '__main__': unittest.main()
