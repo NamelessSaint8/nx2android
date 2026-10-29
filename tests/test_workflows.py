@@ -3,7 +3,7 @@ import re, unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-LOCKS = ('requirements.txt', 'requirements-build.txt')
+LOCKS = ('requirements.txt', 'requirements-build.txt', 'requirements-dev.txt')
 
 
 def entries(path):
@@ -37,6 +37,11 @@ class Lock(unittest.TestCase):
         names = lambda f: [n for n, _ in entries(f)]
         self.assertFalse([n for n in names('requirements.txt') if n.startswith('pyinstaller==')])
         self.assertTrue([n for n in names('requirements-build.txt') if n.startswith('pyinstaller==')])
+
+    def test_dev_apart(self):
+        pkgs = lambda f: {re.match(r'[A-Za-z0-9._-]+', n).group().lower() for n, _ in entries(f)}
+        self.assertTrue({'numpy', 'av'} <= pkgs('requirements-dev.txt'))
+        self.assertFalse({'numpy', 'av'} & pkgs('requirements.txt'))
 
 
 if __name__ == '__main__':
