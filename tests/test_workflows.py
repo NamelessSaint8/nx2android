@@ -95,5 +95,81 @@ class Ci(unittest.TestCase):   # every workflow file, so the release workflow is
         self.assertTrue([r for r in runs if 'Ran [1-9]' in r], 'a run that collects no tests must fail')
 
 
+class Release(unittest.TestCase):   # fork-release.yml: who can start it, where the signing secrets reach, and what a draft needs
+    @classmethod
+    def setUpClass(cls):
+        Ci.setUpClass.__func__(cls)
+        cls.w = cls.wf.get('fork-release.yml') or {}
+        cls.text = (WORKFLOWS / 'fork-release.yml').read_text(encoding='utf-8')
+
+    def job(self, n): return self.w['jobs'][n]
+    def runs(self, n): return [s['run'] for s in self.job(n).get('steps') or [] if 'run' in s]
+    def ran(self, n, word): return any(word in r for r in self.runs(n))
+
+    def test_triggers(self):
+        self.assertIn('fork-release.yml', self.wf)
+        on = self.w.get('on', self.w.get(True))
+        self.assertEqual(on['push'], {'tags': ['v*-ns.*']})   # upstream's v0.1.x tags never start it (D-10)
+        self.assertIn('workflow_dispatch', on)
+        self.assertFalse([k for k in on if 'pull_request' in k])
+        self.assertNotIn('pull_request', self.text)
+
+    def test_secrets_scoped(self):
+        import yaml
+        with_secrets = [n for n, j in self.w['jobs'].items() if 'secrets.' in yaml.safe_dump(j)]
+        self.assertEqual(with_secrets, ['macos'])
+        self.assertEqual(self.job('macos').get('environment'), 'release')
+        self.assertNotIn('secrets.', yaml.safe_dump({k: v for k, v in self.w.items() if k != 'jobs'}))
+        for s in self.job('macos')['steps']:   # secrets enter through step env: only, never with: or a job-wide env
+            self.assertNotIn('secrets.', yaml.safe_dump(s.get('with') or {}))
+        self.assertNotIn('secrets.', yaml.safe_dump(self.job('macos').get('env') or {}))
+
+    def test_write_scope(self):
+        self.assertEqual(self.w['permissions'], {'contents': 'read'})
+        writers = [n for n, j in self.w['jobs'].items() if 'write' in str(j.get('permissions', ''))]
+        self.assertEqual(writers, ['release'])
+        r = self.job('release')
+        self.assertEqual(r['permissions'], {'contents': 'write'})
+        self.assertIn("startsWith(github.ref, 'refs/tags/')", r['if'])
+        self.assertEqual(set(r['needs']), {'build', 'macos', 'upstream-diff'})
+
+    def test_macos_signs_and_notarizes(self):
+        runs = '\n'.join(self.runs('macos'))
+        sub = [ln for ln in runs.splitlines() if 'notarytool submit' in ln]
+        self.assertTrue(sub and '--wait' in sub[0])
+        for w in ('Accepted', 'notarytool log', 'stapler staple', 'stapler validate', 'spctl -a -t open', 'smoke_bundle.py', 'build_bundle.py', 'RUNNER_TEMP'):
+            self.assertIn(w, runs)
+        self.assertTrue([s for s in self.job('macos')['steps'] if s.get('if') == 'always()' and 'security delete-keychain' in s.get('run', '')])
+        self.assertEqual(self.job('macos')['steps'][-1].get('if'), 'always()')
+        self.assertEqual(self.job('macos')['runs-on'], 'macos-15')
+
+    def test_builds_and_floors(self):
+        b = self.job('build'); inc = b['strategy']['matrix']['include']
+        self.assertIs(b['strategy']['fail-fast'], False)
+        self.assertEqual({m['os'] for m in inc}, {'windows-2025', 'ubuntu-22.04', 'ubuntu-24.04-arm'})
+        self.assertEqual({m['os']: str(m['floor']) for m in inc if 'floor' in m}, {'ubuntu-22.04': '2.34', 'ubuntu-24.04-arm': '2.39'})
+        for w in ('build_bundle.py', 'smoke_bundle.py', 'glibc_floor.py', 'build_bootloader.py', '--require-hashes -r requirements.txt -r requirements-build.txt'):
+            self.assertTrue(self.ran('build', w), w)
+        self.assertTrue(self.ran('macos', '--require-hashes -r requirements.txt -r requirements-build.txt'))
+        floor = [s for s in b['steps'] if 'glibc_floor.py' in s.get('run', '')][0]
+        self.assertIn('GITHUB_STEP_SUMMARY', floor['run']); self.assertEqual(floor.get('if'), "runner.os == 'Linux'")
+        for n in ('build', 'macos', 'upstream-diff'):
+            co = [s for s in self.job(n)['steps'] if s.get('uses', '').startswith('actions/checkout@')][0]
+            self.assertEqual(co['with'].get('fetch-depth'), 0, n)   # git describe and the merge base need the history
+        self.assertTrue(self.ran('upstream-diff', 'shirai91/nx2android') and self.ran('upstream-diff', 'git diff --stat FETCH_HEAD...HEAD -- nxnative/'))
+
+    def test_release_checks_four_assets(self):
+        steps = self.job('release')['steps']
+        count = next(i for i, s in enumerate(steps) if all(a in s.get('run', '') for a in ('windows-x64.zip', 'macos-arm64.dmg', 'linux-x64.tar.gz', 'linux-arm64.tar.gz')))
+        create = next(i for i, s in enumerate(steps) if 'gh release create' in s.get('run', ''))
+        self.assertLess(count, create)
+        self.assertIn('-eq 4', steps[count]['run'])
+        self.assertIn('--draft', steps[create]['run'])
+
+    def test_concurrency(self):
+        c = self.w['concurrency']
+        self.assertIn('github.ref', c['group']); self.assertIs(c['cancel-in-progress'], False)
+
+
 if __name__ == '__main__':
     unittest.main()
