@@ -588,25 +588,32 @@ sys.exit(top > floor)
 | A9 | No entitlement needed for ctypes/capstone under the hardened runtime (libffi static trampolines on Apple arm64) | Pattern 8 | The signed smoke fails; add `com.apple.security.cs.allow-unsigned-executable-memory` |
 | A10 | Old adb releases (29.x, Debian 12) also `setsid` their server | Pattern 3 | Covered anyway by `start_new_session=True` in `adb_server()` |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Windows stop channel (D-05 deviation): `checkpoint:decision`.**
    - What we know: CTRL_BREAK needs `CREATE_NEW_PROCESS_GROUP`, which PySide6 can't set (verified typesystem).
    - Recommendation: stdin `stop` + `TerminateJobObject(job, 130)`; force = `QProcess.kill()`.
+   - **RESOLVED:** D-09 (CONTEXT.md) adopts the recommendation: stdin `stop`, kill-on-close Job Object created after `adb start-server`, exit 130; force-kill is a plain kill of porter. Planned in 01-02 Task 2 (porter side) and 01-03 Task 2 (GUI side).
 2. **Fork tag scheme: `checkpoint:decision` (one-way).**
    - Recommendation: `v<upstream version>-ns.<n>` (e.g. `v0.1.2-ns.1`), trigger `tags: ['v*-ns.*']`, assets `nx2android-0.1.2-ns.1-<os>-<arch>.<ext>`.
    - Alternative: a separate prefix (`nx2a-0.1.2.1`), which avoids looking like a semver pre-release.
+   - **RESOLVED:** D-10 (CONTEXT.md, one-way, decided) takes `v<upstream version>-ns.<n>`, trigger `v*-ns.*` plus `workflow_dispatch`, assets `nx2android-<version>-<os>-<arch>.<ext>`. Planned in 01-06 (asset names) and 01-08 Task 1 (trigger).
 3. **macOS bundle identifier and app name: `checkpoint:decision` (one-way).**
    - Recommendation: `io.github.namelesssaint8.nx2android`, display name `nx2android` (matches the GitHub Pages reverse-DNS convention for the fork owner) `[CITED: STACK.md]`.
+   - **RESOLVED:** D-11 (CONTEXT.md, one-way, decided) takes `io.github.namelesssaint8.nx2android`, display name `nx2android`. Planned in 01-06 Task 1 (`packaging/nx2android.spec` BUNDLE).
 4. **x64 glibc floor value.**
    - What we know: CONTEXT says 2.34 (the PySide6 wheel tag); the build runner `ubuntu-22.04` has 2.35, and RHEL/Rocky 9 ship 2.34 `[ASSUMED]`.
    - Recommendation: let the first release run report the real maximum. Set the gate at 2.34 and only relax it if the measured floor is 2.35 (then update CONTEXT/INSTALL to "2.35+").
+   - **RESOLVED:** the x64 gate is 2.34 (arm64 2.39), enforced by `packaging/glibc_floor.py` (01-06 Task 2) in the release build matrix (01-08 Task 1). The first release run measures the real floor; if x64 is above 2.34 the executor does not relax the gate but stops at a checkpoint for the developer, because PKG-03 names 2.34 (01-08 Task 3).
 5. **Per-push unsigned artifacts in `fork-ci.yml`.**
    - Recommendation: no, at first; testers get drafts from `fork-release.yml` via `workflow_dispatch`. This keeps CI fast on the arm64 runner.
+   - **RESOLVED:** no per-push bundles; `fork-ci.yml` uploads none and testers get bundles from `fork-release.yml` dispatch runs or draft releases (01-07 objective, 01-08).
 6. **Wayland check depth in CI.**
    - Recommendation: plugin presence check in CI; real X11/Wayland starts manual (tester / VM), recorded in RELEASE_CHECK. Optional `weston --backend=headless` later.
+   - **RESOLVED:** CI checks plugin presence (`libqxcb.so`, `libqwayland*.so`, `libxdg-shell.so`) in `packaging/smoke_bundle.py` (01-06 Task 2); real X11 and Wayland starts are manual rows in `docs/RELEASE_CHECK.md` (01-08 Task 3). A headless weston run is not part of this phase.
 7. **Apple Developer ID identity is not in the local keychain** (0 identities found).
    - STATE.md says the certificate is ready, so it only needs exporting as a `.p12` for the `release` environment secrets. The planner adds a `checkpoint:human-action` to create the environment and secrets (`MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `KEYCHAIN_PASSWORD`, `APPLE_API_KEY_P8_BASE64`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `MACOS_SIGN_IDENTITY`).
+   - **RESOLVED:** 01-08 Task 2 is a blocking `checkpoint:human-action` that creates the protected `release` environment and all seven secrets, with a `gh api` check that lists them; the values never pass through the session.
 
 ## Environment Availability
 
