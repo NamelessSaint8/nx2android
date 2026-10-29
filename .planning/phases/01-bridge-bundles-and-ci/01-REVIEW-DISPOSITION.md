@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Windows stop without a Job Object orphans the whole tree"
   - id: WR-02
     severity: warning
@@ -13,11 +13,11 @@ findings:
     title: "Child processes inherit the stop channel (porter's stdin), and `adb shell` can swallow \"stop\""
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The frozen engine copy runs at import time and has no recovery when it fails"
   - id: WR-04
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`upstream-diff` is described as \"a report, not a gate\", but the release job needs it"
   - id: WR-05
     severity: warning
@@ -25,7 +25,7 @@ findings:
     title: "The GUI's `devices` limit (15 s) is shorter than porter's own adb timeouts (30 s)"
   - id: WR-06
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Unit tests start the developer machine's real adb server"
   - id: IN-01
     severity: info
@@ -43,21 +43,21 @@ findings:
     severity: info
     disposition: open
     title: "Two ways of escaping, and a misleading status on quit"
-open: 10
+open: 6
 total: 10
-recorded: 2026-10-29T20:18:43.567Z
+recorded: 2026-10-29T21:11:26.116Z
 ---
 
 # Phase 01: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
+| WR-01 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
-| WR-04 | warning | open | - |
+| WR-03 | warning | fixed | 01-REVIEW-FIX.md |
+| WR-04 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-05 | warning | open | - |
-| WR-06 | warning | open | - |
+| WR-06 | warning | fixed | 01-REVIEW-FIX.md |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
