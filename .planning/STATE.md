@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-10-29T09:17:13.675Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-10-29T09:32:41.928Z"
 last_activity: 2026-10-29
 last_activity_desc: Phase 01 execution started
-state_head: 4e3d7911aeae1654f0a2b41eab379c5e8a344747
+state_head: 88f44607f8b01ac56a09ea10bb10e2e4586849cb
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-10-29 — Phase 01 execution started
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 7 min | 3 tasks | 6 files |
 | Phase 01 P06 | 9 min | 3 tasks | 9 files |
 | Phase 01 P03 | 10min | 3 tasks | 5 files |
+| Phase 01 P04 | 11min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 01]: A stopped run ending by signal (CrashExit) reports 130 even with exit code 0; unstopped CrashExit with code 0 reports -1
 - [Phase 01]: Failed downloads show their escaped cause and an Open log link inline; 130 shows cancelled
 - [Phase 01]: test_bridge sets NX2A_HOME in setUpModule because test_porter sets its own at import
+- [Phase 01]: 01-04: one-shot calls report done(obj, code, fail); the exit code alone is no failure (inspect exits 2 for an unportable game)
+- [Phase 01]: 01-04: a one-shot whose owner is destroyed mid-call calls nothing and kills its own session (shiboken6.isValid guard)
+- [Phase 01]: 01-04: port_build_error.jsonl records a port of a missing folder (machine-independent, names the folder); fake_porter --hang makes a one-shot hang
 
 ### Pending Todos
 
@@ -111,6 +115,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T09:17:13.656Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-10-29T09:32:41.912Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None

@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. When a porter command fails, crashes or hangs, the GUI shows the real cause, or a timeout message with Retry, never a swallowed stderr or "no game found". The full saved log of any run opens from the GUI.
   4. Every push runs the test suite on all four OSes, installed from the hashed lockfile, including headless GUI bridge tests that replay golden JSON-lines fixtures. A missing optional engine module (e.g. `lz4`) shows up as a clear skip, not an import failure.
   5. The release workflow builds all four bundles, signs and notarizes the macOS one, smoke-tests each frozen bundle, and reports the Linux glibc symbol floor and the `nxnative/` diff against upstream. Its signing secrets sit in a protected environment that pull-request workflows cannot reach, and every action is pinned by SHA.
-**Plans**: 5/8 plans executed
+**Plans**: 6/8 plans executed
 
 Plans:
 **Wave 1**
@@ -46,7 +46,7 @@ Plans:
 - [x] 01-03-PLAN.md — GUI: real cause and Open log, tree-wide Cancel with "stopping…", close confirmation (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 01-04-PLAN.md — GUI: one-shot timeouts with Retry, real errors in every view, golden JSON-lines replays (wave 4)
+- [x] 01-04-PLAN.md — GUI: one-shot timeouts with Retry, real errors in every view, golden JSON-lines replays (wave 4)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 01-07-PLAN.md — fork-ci.yml on four hosts from the lock, TEST-02 skip, first green run (wave 5)
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Bridge, Bundles and CI | 5/8 | In Progress | - |
+| 1. Bridge, Bundles and CI | 6/8 | In Progress | - |
 | 2. Porter Hardening | 0/TBD | Not started | - |
 | 3. Host Toolchains and Guided First Run | 0/TBD | Not started | - |
 | 4. Game Library and Per-Game Settings | 0/TBD | Not started | - |

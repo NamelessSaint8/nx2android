@@ -11,8 +11,8 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 
 - [ ] **BRDG-01**: User can cancel a running port and every child process (dotnet, MSBuild nodes, clang, shader tools) stops on Windows, macOS and Linux, while the adb server keeps running
 - [x] **BRDG-02**: User closing the window during a port is asked to confirm; confirming stops the run the same way Cancel does
-- [ ] **BRDG-03**: User sees the real cause when a porter command fails (structured `error` event or JSON error), never a swallowed stderr or "no game found" for a crash
-- [ ] **BRDG-04**: User sees a timeout message with a retry when a one-shot porter call hangs, instead of a stuck view
+- [x] **BRDG-03**: User sees the real cause when a porter command fails (structured `error` event or JSON error), never a swallowed stderr or "no game found" for a crash
+- [x] **BRDG-04**: User sees a timeout message with a retry when a one-shot porter call hangs, instead of a stuck view
 - [x] **BRDG-05**: User can open the full saved log of any port run from the GUI
 - [x] **BRDG-06**: User sees "cancelled" only after the run has actually stopped
 
@@ -99,7 +99,7 @@ Requirements for the cross-platform GUI milestone. Each maps to a roadmap phase.
 
 - [ ] **TEST-01**: Tests cover downloads and unpacking (crafted zip/tar), adb and install (resume, size parsing, stale-file removal, replace-signer), toolchain detection per OS, and CLI error paths
 - [ ] **TEST-02**: The suite reports a clear skip instead of failing at import when optional engine modules (e.g. `lz4`) are missing
-- [ ] **TEST-03**: GUI bridge tests replay golden JSON-lines fixtures and run headless (Qt offscreen)
+- [x] **TEST-03**: GUI bridge tests replay golden JSON-lines fixtures and run headless (Qt offscreen)
 
 ### Verification
 
@@ -169,8 +169,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | BRDG-01 | Phase 1 | Pending |
 | BRDG-02 | Phase 1 | Complete |
-| BRDG-03 | Phase 1 | Pending |
-| BRDG-04 | Phase 1 | Pending |
+| BRDG-03 | Phase 1 | Complete |
+| BRDG-04 | Phase 1 | Complete |
 | BRDG-05 | Phase 1 | Complete |
 | BRDG-06 | Phase 1 | Complete |
 | PORT-01 | Phase 4 | Pending |
@@ -224,7 +224,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HARD-10 | Phase 2 | Pending |
 | TEST-01 | Phase 2 | Pending |
 | TEST-02 | Phase 1 | Pending |
-| TEST-03 | Phase 1 | Pending |
+| TEST-03 | Phase 1 | Complete |
 | VER-01 | Phase 6 | Pending |
 | VER-02 | Phase 6 | Pending |
 
