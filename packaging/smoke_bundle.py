@@ -1,7 +1,7 @@
 # Smoke test of a built bundle, run by the release workflow (fork-release.yml) and by hand:
 #   python packaging/smoke_bundle.py dist/nx2android-<version>-macos-arm64.dmg      (or an .app, or a bundle folder such as dist/nx2android)
 # It runs the frozen app from a read-only place (the DMG mounted read-only, or a chmod a-w copy) with a fresh NX2A_HOME, and fails unless doctor and
-# profiles answer, the bundle's files are unchanged afterwards (PKG-05: nothing is ever written into the bundle) and, on macOS, the signature still verifies.
+# profiles answer, the GUI starts offscreen (smoke_gui.py), the bundle's files are unchanged afterwards (PKG-05: nothing is ever written into the bundle) and, on macOS, the signature still verifies.
 # Host Python, standard library only.
 import json, os, shutil, stat, subprocess, sys, tempfile
 from pathlib import Path
@@ -61,6 +61,13 @@ def main(argv):
         check('doctor --json answers a JSON list', isinstance(doc, list) and code in (0, 1), f'exit {code}: {err}')
         doc, code, err = porter(exe, env, 'profiles', '--json')
         check('profiles --json lists the profiles', isinstance(doc, list) and len(doc) > 0 and code == 0, f'exit {code}: {err}')
+        # the engine modules, capstone under the hardened runtime and an offscreen Window, which only the frozen (and maybe signed) app can show
+        try:
+            r = subprocess.run([str(exe), str(Path(__file__).resolve().parent / 'smoke_gui.py')], capture_output=True, text=True, timeout=90,
+                               env=dict(env, QT_QPA_PLATFORM='offscreen'), cwd=home)
+            print(r.stdout.strip()); code, err = r.returncode, (r.stderr.strip().splitlines() or [''])[-1]
+        except subprocess.TimeoutExpired: code, err = 'timeout', ''
+        check('offscreen GUI start (smoke_gui.py)', code == 0, f'exit {code}: {err}')
         after = listing(root)
         changed = sorted(k for k in before.keys() | after.keys() if before.get(k) != after.get(k))
         check('nothing was written into the bundle', not changed, ', '.join(changed[:10]))
