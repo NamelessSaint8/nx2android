@@ -110,7 +110,7 @@ nx2android/
   porter/                port pipeline (python -m porter)
   gui/                   desktop app (python -m gui)
   devtools/              device bring-up scripts
-  packaging/             the player's bundle: build_bundle.py, build_bootloader.py, nx2android.spec, nx2android.py, smoke_bundle.py, smoke_gui.py, glibc_floor.py, INSTALL.md
+  packaging/             the player's bundle: build_bundle.py, build_bootloader.py, nx2android.spec, hooks/ (PyInstaller hook overrides: no gtk3 theme on Linux), nx2android.py, smoke_bundle.py, smoke_gui.py, glibc_floor.py, INSTALL.md
   .github/workflows/     fork-ci.yml (tests, four hosts), fork-release.yml (bundles)
   tests/                 unit tests (python -m unittest discover tests); arch_rules.py checks this file's layer rules
   requirements.txt       the Python modules the tool needs

@@ -17,7 +17,11 @@ for pkg in ('capstone', 'lz4', 'PIL', 'yaml') + (('backports.zstd',) if sys.vers
     d, b, h = collect_all(pkg); datas += d; binaries += b; hidden += h
 
 a = Analysis([str(ROOT / 'packaging/nx2android.py')], pathex=[str(ROOT)], binaries=binaries, datas=datas, hiddenimports=hidden,
-             excludes=sorted(NOT_STDLIB - {'test'}), noarchive=False)
+             excludes=sorted(NOT_STDLIB - {'test'}), hookspath=[str(ROOT / 'packaging/hooks')], noarchive=False)
+# A bundled GIO loads the host's GIO modules, built for a newer GLib, and they fail to bind (UAT G-01-7): refuse the stack whatever plugin brings it back
+GTK = sorted({os.path.basename(b[0]) for b in a.binaries if os.path.basename(b[0]).startswith(('libgio-2.0.', 'libgtk-3.'))})
+if GTK: sys.exit(f"[RED] the bundle collected {', '.join(GTK)}: the host's GIO modules would load into the bundle's older GLib (UAT G-01-7); "
+                 'leave the Qt plugin that links them out in packaging/hooks/')
 pyz = PYZ(a.pure)
 # MACOS_SIGN_IDENTITY: a Developer ID (release workflow); unset, PyInstaller signs ad hoc, which arm64 needs. No entitlements to start (hardened runtime as is)
 SIGN = os.environ.get('MACOS_SIGN_IDENTITY') or None
