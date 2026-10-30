@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Bridge, Bundles and CI
-status: verifying
-stopped_at: Completed 01-08-PLAN.md
-last_updated: "2026-10-29T19:28:39.931Z"
-last_activity: 2026-10-29
+status: executing
+stopped_at: Completed 01-09-PLAN.md
+last_updated: "2026-10-30T06:24:13.283Z"
+last_activity: 2026-10-30
 last_activity_desc: Phase 01 execution started
-state_head: 78d7e2bb98831154d8aa019b25c28d76b8d0e9b4
+state_head: 4252df48ac67801b3358f5a4e041514a48003f32
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
   percent: 0
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-29)
 ## Current Position
 
 Phase: 01 (Bridge, Bundles and CI) — EXECUTING
-Plan: 8 of 8
-Status: Phase complete — ready for verification
-Last activity: 2026-10-29 — Phase 01 execution started
+Plan: 10 of 10
+Status: Ready to execute
+Last activity: 2026-10-30 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P04 | 11min | 3 tasks | 11 files |
 | Phase 01 P07 | 2 fix rounds | 3 tasks | 12 files |
 | Phase 01 P08 | 3 sessions | 3 tasks | 7 files |
+| Phase 01 P09 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Recent decisions affecting current work:
 - [Phase 01]: test_bridge skips on Python < 3.12 in CI too: a declared version floor, a deliberate exception to TEST-02's fail-in-CI rule
 - [Phase 01]: Linux x64 floor is glibc 2.35 (PKG-03), not 2.34: the ubuntu-22.04 runner's libpython, libgcc_s, cairo, tcl and tk need it; user chose this over a container build or trimming (supersedes RESEARCH Open Question 4)
 - [Phase 01]: fork-release retries stapler staple up to 4 times; notarization itself is not retried
+- [Phase 01]: TLS trust: porter/tls.py context() loads the first host CA file only when the default store holds no CA; no truststore, no process-wide SSL_CERT_FILE
 
 ### Pending Todos
 
@@ -121,6 +123,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-29T19:28:39.913Z
-Stopped at: Completed 01-08-PLAN.md
+Last session: 2026-10-30T06:24:13.202Z
+Stopped at: Completed 01-09-PLAN.md
 Resume file: None

@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. When a porter command fails, crashes or hangs, the GUI shows the real cause, or a timeout message with Retry, never a swallowed stderr or "no game found". The full saved log of any run opens from the GUI.
   4. Every push runs the test suite on all four OSes, installed from the hashed lockfile, including headless GUI bridge tests that replay golden JSON-lines fixtures. A missing optional engine module (e.g. `lz4`) shows up as a clear skip, not an import failure.
   5. The release workflow builds all four bundles, signs and notarizes the macOS one, smoke-tests each frozen bundle, and reports the Linux glibc symbol floor and the `nxnative/` diff against upstream. Its signing secrets sit in a protected environment that pull-request workflows cannot reach, and every action is pinned by SHA.
-**Plans**: 8/10 plans executed
+**Plans**: 9/10 plans executed
 
 Plans:
 **Wave 1**
@@ -55,7 +55,7 @@ Plans:
 - [x] 01-08-PLAN.md — fork-release.yml: build, sign, notarize, smoke, glibc and upstream-diff reports, draft release (wave 6)
 
 **Gap closure** *(UAT gaps G-01-6, G-01-7)*
-- [ ] 01-09-PLAN.md — porter's own SSL context: downloads trust the host's CA file when the bundled OpenSSL has none (G-01-6, wave 1)
+- [x] 01-09-PLAN.md — porter's own SSL context: downloads trust the host's CA file when the bundled OpenSSL has none (G-01-6, wave 1)
 - [ ] 01-10-PLAN.md — Linux bundles without PySide6's gtk3 theme and the runner's GTK3/GIO stack; release run and frozen-bundle checks for both gaps (G-01-7, G-01-6, wave 2)
 **UI hint**: yes
 
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Bridge, Bundles and CI | 8/10 | In Progress | - |
+| 1. Bridge, Bundles and CI | 9/10 | In Progress | - |
 | 2. Porter Hardening | 0/TBD | Not started | - |
 | 3. Host Toolchains and Guided First Run | 0/TBD | Not started | - |
 | 4. Game Library and Per-Game Settings | 0/TBD | Not started | - |

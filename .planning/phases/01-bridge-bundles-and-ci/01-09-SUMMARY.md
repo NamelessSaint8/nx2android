@@ -126,3 +126,7 @@ None - no external service configuration required.
 ---
 *Phase: 01-bridge-bundles-and-ci*
 *Completed: 2026-10-30*
+
+## Self-Check: PASSED
+
+Files porter/tls.py, tests/test_tls.py, tests/fixtures/tls/test-ca.pem exist; commits c1d4793, c7ac1ef, 947266e are ancestors of HEAD.
