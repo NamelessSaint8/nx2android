@@ -6,7 +6,7 @@ import hashlib, json, os, platform, shutil, stat, sys, tarfile, urllib.request, 
 from dataclasses import dataclass
 from pathlib import Path
 
-from porter import config, toolchain
+from porter import config, toolchain, tls
 from porter.paths import player_tools
 from porter.upstream import BuildError, PROG
 
@@ -34,7 +34,7 @@ class Item:
 
 
 def _get(url, timeout=60):
-    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'nx2android'}), timeout=timeout) as r: return r.read()
+    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'nx2android'}), timeout=timeout, context=tls.context()) as r: return r.read()
 
 
 def _google_os(): return {'win32': 'windows', 'darwin': 'macosx'}.get(sys.platform, 'linux')
