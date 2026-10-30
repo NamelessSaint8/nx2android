@@ -86,13 +86,13 @@ def plan(names=None):
         elif n == '.NET SDK': out.append(_dotnet())
     for it in out:
         if not it.size:
-            with urllib.request.urlopen(urllib.request.Request(it.url, method='HEAD', headers={'User-Agent': 'nx2android'}), timeout=60) as r: it.size = int(r.headers.get('Content-Length') or 0)
+            with urllib.request.urlopen(urllib.request.Request(it.url, method='HEAD', headers={'User-Agent': 'nx2android'}), timeout=60, context=tls.context()) as r: it.size = int(r.headers.get('Content-Length') or 0)
     return out
 
 
 def _download(it, dest):   # to dest, counting bytes and hashing as it goes; a wrong checksum deletes the file
     h, part = hashlib.new(it.algo), dest.with_suffix(dest.suffix + '.part')
-    with urllib.request.urlopen(urllib.request.Request(it.url, headers={'User-Agent': 'nx2android'}), timeout=120) as r, open(part, 'wb') as f:
+    with urllib.request.urlopen(urllib.request.Request(it.url, headers={'User-Agent': 'nx2android'}), timeout=120, context=tls.context()) as r, open(part, 'wb') as f:
         total, done = int(r.headers.get('Content-Length') or it.size or 0), 0
         PROG.set(step='downloading', done=0, total=total or None, unit='B')
         while chunk := r.read(1 << 20):

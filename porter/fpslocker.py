@@ -10,6 +10,8 @@
 import ast, math, re, struct, urllib.error, urllib.request
 from pathlib import Path
 
+from porter import tls
+
 RAW = 'https://raw.githubusercontent.com/masagrator/FPSLocker-Warehouse/v4/SaltySD/plugins/FPSLocker/patches/{tid}/{bid}.yaml'
 TARGETS = (30, 60)
 REFRESH = 60   # the display rate FPS_LOCK_TARGET compares with (the host presents at 60 Hz)
@@ -26,7 +28,7 @@ def url(title_id, build_id): return RAW.format(tid=title_id.upper(), bid=build_i
 def fetch(title_id, build_id, timeout=30):
     """The config of this build as text, None when the warehouse has none (HTTP 404). Other errors (no network) raise OSError"""
     try:
-        with urllib.request.urlopen(urllib.request.Request(url(title_id, build_id), headers={'User-Agent': 'nx2android'}), timeout=timeout) as r: return r.read().decode('utf-8-sig')
+        with urllib.request.urlopen(urllib.request.Request(url(title_id, build_id), headers={'User-Agent': 'nx2android'}), timeout=timeout, context=tls.context()) as r: return r.read().decode('utf-8-sig')
     except urllib.error.HTTPError as e:
         if e.code == 404: return None
         raise
